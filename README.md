@@ -6,7 +6,7 @@
 [![GitHub Issues](https://img.shields.io/github/issues/hiisi-digital/viola-default-lints.svg)](https://github.com/hiisi-digital/viola-default-lints/issues)
 ![License](https://img.shields.io/github/license/viola-default-lints?color=%23009689)
 
-> A collection of convention linters for viola.
+> A collection of convention linters for viola with sensible default rules.
 
 </div>
 
@@ -16,8 +16,10 @@ This package provides a set of opinionated convention linters that work with the
 [viola](https://jsr.io/@hiisi/viola) runtime. These linters check for common issues like
 code duplication, naming conventions, documentation gaps, and file organization problems.
 
-This is one example of a linter collection for viola. You can use these linters as-is,
-use them as a starting point for your own, or write completely custom linters.
+The plugin includes **sensible default rules** that classify issues by impact:
+- Critical/Major impact → error
+- Minor impact → warn
+- Trivial impact → info
 
 ## Installation
 
@@ -30,14 +32,12 @@ deno add jsr:@hiisi/viola jsr:@hiisi/viola-default-lints
 Create a `viola.config.ts`:
 
 ```ts
-import { viola } from "@hiisi/viola";
-import { defaultLints } from "@hiisi/viola-default-lints";
+import { viola, report, when } from "@hiisi/viola";
+import defaultLints from "@hiisi/viola-default-lints";
 
 export default viola()
-  .use(defaultLints)
-  .error(">=major")
-  .warn("=minor")
-  .in("**/*_test.ts").off();
+  .use(defaultLints)  // adds linters + default rules
+  .rule(report.off, when.in("**/*_test.ts"));  // your overrides
 ```
 
 Run with CLI:
@@ -46,43 +46,45 @@ Run with CLI:
 deno run -A jsr:@hiisi/viola-cli
 ```
 
+Your rules are always checked **before** plugin rules (first match wins), so you can override the defaults.
+
+### Without Default Rules
+
+If you want just the linters without any default rules:
+
+```ts
+import { viola, report, when, Impact } from "@hiisi/viola";
+import { linters } from "@hiisi/viola-default-lints";
+
+export default viola()
+  .add(linters)  // just linters, no default rules
+  .rule(report.error, when.impact.atLeast(Impact.Critical))
+  .rule(report.warn, when.impact.atLeast(Impact.Major));
+```
+
 ### Configure Linter Settings
 
 ```ts
-import { viola } from "@hiisi/viola";
-import { defaultLints } from "@hiisi/viola-default-lints";
+import { viola, report, when } from "@hiisi/viola";
+import defaultLints from "@hiisi/viola-default-lints";
 
 export default viola()
   .use(defaultLints)
   .set("similar-functions.threshold", 0.8)
   .set("duplicate-strings.minLength", 10)
-  .error(">=major")
-  .warn("=minor");
-```
-
-### Per-Scope Settings
-
-```ts
-export default viola()
-  .use(defaultLints)
-  .set("similar-functions.threshold", 0.85)
-  .error(">=major")
-  
-  .in("packages/core/**")
-    .set("similar-functions.threshold", 0.95)  // stricter in core
-    .error(">=minor");
+  .rule(report.off, when.in("**/*_test.ts"));
 ```
 
 ### Import Individual Linters
 
 ```ts
-import { viola } from "@hiisi/viola";
-import { typeLocation, similarFunctions } from "@hiisi/viola-default-lints";
+import { viola, report, when, Impact } from "@hiisi/viola";
+import { typeLocationLinter, similarFunctionsLinter } from "@hiisi/viola-default-lints";
 
 export default viola()
-  .use(typeLocation)
-  .use(similarFunctions)
-  .error(">=major");
+  .add(typeLocationLinter)
+  .add(similarFunctionsLinter)
+  .rule(report.error, when.impact.atLeast(Impact.Major));
 ```
 
 ## Available Linters
@@ -98,6 +100,16 @@ export default viola()
 | `missing-docs` | Find exports without documentation |
 | `orphaned-code` | Find unused internal code |
 | `schema-collision` | Find conflicting schema definitions |
+
+## Default Rules
+
+The plugin configures these rules (checked after your rules):
+
+```ts
+.rule(report.error, when.impact.atLeast(Impact.Major))
+.rule(report.warn, when.impact.is(Impact.Minor))
+.rule(report.info, when.impact.is(Impact.Trivial))
+```
 
 ## Writing Your Own Linters
 
