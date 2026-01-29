@@ -7,7 +7,9 @@
  * @module
  */
 
+import { assert } from "@std/assert";
 import type {
+    FileInfo,
     BaseLinter,
     CodebaseData,
     ExportInfo,
