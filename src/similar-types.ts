@@ -13,13 +13,14 @@ import {
     BaseLinter,
     type CodebaseData,
     compareIdentifiers,
+    type Issue,
+    type IssueCatalog,
     jaccardSimilarity,
     type LinterConfig,
     type LinterDataRequirements,
     type LinterMeta,
     type SimilarityThresholds,
     type TypeInfo,
-    type Violation,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -191,15 +192,42 @@ export class SimilarTypesLinter extends BaseLinter {
     name: "Similar Types",
     description:
       "Detects types/interfaces with similar names or identical field structures",
-    defaultSeverity: "warning",
+  };
+
+  readonly catalog: IssueCatalog = {
+    "similar-types/similar-name-high": {
+      category: "maintainability",
+      impact: "major",
+      description: "Type names are very similar, likely indicating duplicates that should be consolidated",
+    },
+    "similar-types/similar-name-medium": {
+      category: "maintainability",
+      impact: "minor",
+      description: "Type names are moderately similar, review to ensure they serve distinct purposes",
+    },
+    "similar-types/duplicate-type": {
+      category: "maintainability",
+      impact: "critical",
+      description: "Type exists in multiple files with nearly identical structure",
+    },
+    "similar-types/same-name-different-structure": {
+      category: "consistency",
+      impact: "major",
+      description: "Type exists in multiple files with different structures, which is confusing and error-prone",
+    },
+    "similar-types/similar-structure": {
+      category: "maintainability",
+      impact: "minor",
+      description: "Types have very similar field structures but different names, consider consolidating",
+    },
   };
 
   readonly requirements: LinterDataRequirements = {
     types: true,
   };
 
-  lint(data: CodebaseData, config: LinterConfig): Violation[] {
-    const violations: Violation[] = [];
+  lint(data: CodebaseData, config: LinterConfig): Issue[] {
+    const issues: Issue[] = [];
     const options = getOptions(config);
 
     // Filter types to check
@@ -239,20 +267,20 @@ export class SimilarTypesLinter extends BaseLinter {
           continue;
         }
 
-        const violation = this.checkPair(typeA, typeB, options);
-        if (violation) {
-          violations.push(violation);
+        const issue = this.checkPair(typeA, typeB, options);
+        if (issue) {
+          issues.push(issue);
         }
       }
     }
 
     // Check for structurally identical types (if enabled)
     if (options.checkFieldStructure) {
-      const structuralViolations = this.checkFieldStructures(types, options);
-      violations.push(...structuralViolations);
+      const structuralIssues = this.checkFieldStructures(types, options);
+      issues.push(...structuralIssues);
     }
 
-    return violations;
+    return issues;
   }
 
   /**
@@ -262,7 +290,7 @@ export class SimilarTypesLinter extends BaseLinter {
     typeA: TypeInfo,
     typeB: TypeInfo,
     options: SimilarTypesOptions
-  ): Violation | null {
+  ): Issue | null {
     const { similarity, level: _level, metrics } = compareIdentifiers(typeA.name, typeB.name);
 
     // Exact same name in different files
@@ -286,11 +314,11 @@ export class SimilarTypesLinter extends BaseLinter {
     const pct = (similarity * 100).toFixed(0);
 
     if (isError) {
-      return this.error(
-        "similar-type-name-high",
+      return this.issue(
+        "similar-name-high",
+        typeA.location,
         `Type "${typeA.name}" is very similar to "${typeB.name}" (${pct}% match). ` +
           `This likely indicates duplicate types that should be consolidated.`,
-        typeA.location,
         {
           relatedLocations: [typeB.location],
           suggestion:
@@ -310,11 +338,11 @@ export class SimilarTypesLinter extends BaseLinter {
       );
     }
 
-    return this.warning(
-      "similar-type-name-medium",
+    return this.issue(
+      "similar-name-medium",
+      typeA.location,
       `Type "${typeA.name}" has similar name to "${typeB.name}" (${pct}% match). ` +
         `Review to ensure they serve distinct purposes.`,
-      typeA.location,
       {
         relatedLocations: [typeB.location],
         suggestion:
@@ -340,17 +368,17 @@ export class SimilarTypesLinter extends BaseLinter {
     typeA: TypeInfo,
     typeB: TypeInfo,
     _options: SimilarTypesOptions
-  ): Violation | null {
+  ): Issue | null {
     // Same name in different files is definitely suspicious
     const fieldComparison = compareFields(typeA.fields, typeB.fields);
 
     if (fieldComparison.combined > 0.9) {
       // Nearly identical types - likely duplicate
-      return this.error(
+      return this.issue(
         "duplicate-type",
+        typeA.location,
         `Type "${typeA.name}" exists in multiple files with nearly identical structure (${(fieldComparison.combined * 100).toFixed(0)}% match). ` +
           `This is duplicate code that should be consolidated.`,
-        typeA.location,
         {
           relatedLocations: [typeB.location],
           suggestion:
@@ -371,11 +399,11 @@ export class SimilarTypesLinter extends BaseLinter {
       );
     } else {
       // Same name but different structure - needs investigation
-      return this.error(
+      return this.issue(
         "same-name-different-structure",
+        typeA.location,
         `Type "${typeA.name}" exists in multiple files with DIFFERENT structures. ` +
           `This is confusing and error-prone.`,
-        typeA.location,
         {
           relatedLocations: [typeB.location],
           suggestion:
@@ -405,8 +433,8 @@ export class SimilarTypesLinter extends BaseLinter {
   private checkFieldStructures(
     types: TypeInfo[],
     options: SimilarTypesOptions
-  ): Violation[] {
-    const violations: Violation[] = [];
+  ): Issue[] {
+    const issues: Issue[] = [];
     const threshold = options.fieldSimilarityThreshold ?? 0.8;
     const checked = new Set<string>();
 
@@ -440,12 +468,12 @@ export class SimilarTypesLinter extends BaseLinter {
         const fieldComparison = compareFields(typeA.fields, typeB.fields);
 
         if (fieldComparison.combined >= threshold) {
-          violations.push(
-            this.warning(
-              "similar-type-structure",
+          issues.push(
+            this.issue(
+              "similar-structure",
+              typeA.location,
               `Types "${typeA.name}" and "${typeB.name}" have very similar field structures (${(fieldComparison.combined * 100).toFixed(0)}% match) ` +
                 `but different names. Consider consolidating or creating a base type.`,
-              typeA.location,
               {
                 relatedLocations: [typeB.location],
                 suggestion:
@@ -470,7 +498,7 @@ export class SimilarTypesLinter extends BaseLinter {
       }
     }
 
-    return violations;
+    return issues;
   }
 }
 

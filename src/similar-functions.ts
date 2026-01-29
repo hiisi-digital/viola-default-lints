@@ -14,11 +14,12 @@ import {
     type CodebaseData,
     compareIdentifiers,
     type FunctionInfo,
+    type Issue,
+    type IssueCatalog,
     type LinterConfig,
     type LinterDataRequirements,
     type LinterMeta,
     type SimilarityThresholds,
-    type Violation,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -160,15 +161,37 @@ export class SimilarFunctionsLinter extends BaseLinter {
     name: "Similar Functions",
     description:
       "Detects functions with similar names that might be duplicates or should be consolidated",
-    defaultSeverity: "warning",
+  };
+
+  readonly catalog: IssueCatalog = {
+    "similar-functions/similar-name-high": {
+      category: "maintainability",
+      impact: "major",
+      description: "Two functions have very similar names (85%+ match), indicating likely duplicate code that should be consolidated.",
+    },
+    "similar-functions/similar-name-medium": {
+      category: "maintainability",
+      impact: "minor",
+      description: "Two functions have similar names (70-85% match). Review to ensure they serve distinct purposes.",
+    },
+    "similar-functions/duplicate-function": {
+      category: "maintainability",
+      impact: "critical",
+      description: "The same function exists in multiple files with identical signatures. This is duplicate code that should be consolidated.",
+    },
+    "similar-functions/same-name-different-params": {
+      category: "consistency",
+      impact: "major",
+      description: "The same function name exists in multiple files with different signatures. This is confusing and error-prone.",
+    },
   };
 
   readonly requirements: LinterDataRequirements = {
     functions: true,
   };
 
-  lint(data: CodebaseData, config: LinterConfig): Violation[] {
-    const violations: Violation[] = [];
+  lint(data: CodebaseData, config: LinterConfig): Issue[] {
+    const issues: Issue[] = [];
     const options = getOptions(config);
 
     // Filter functions to check
@@ -212,14 +235,14 @@ export class SimilarFunctionsLinter extends BaseLinter {
           continue;
         }
 
-        const violation = this.checkPair(funcA, funcB, options);
-        if (violation) {
-          violations.push(violation);
+        const issue = this.checkPair(funcA, funcB, options);
+        if (issue) {
+          issues.push(issue);
         }
       }
     }
 
-    return violations;
+    return issues;
   }
 
   /**
@@ -229,7 +252,7 @@ export class SimilarFunctionsLinter extends BaseLinter {
     funcA: FunctionInfo,
     funcB: FunctionInfo,
     options: SimilarFunctionsOptions
-  ): Violation | null {
+  ): Issue | null {
     const { similarity, level: _level, metrics } = compareIdentifiers(funcA.name, funcB.name);
 
     // Exact same name in different files
@@ -242,23 +265,22 @@ export class SimilarFunctionsLinter extends BaseLinter {
       return null;
     }
 
-    // Determine severity based on similarity
-    const isError = similarity >= (options.errorThreshold ?? 0.85);
-    const isWarning = similarity >= (options.warningThreshold ?? 0.7);
+    // Determine level based on similarity
+    const isHigh = similarity >= (options.errorThreshold ?? 0.85);
+    const isMedium = similarity >= (options.warningThreshold ?? 0.7);
 
-    if (!isError && !isWarning) {
+    if (!isHigh && !isMedium) {
       return null;
     }
 
-    const _severity = isError ? "error" : "warning";
     const pct = (similarity * 100).toFixed(0);
 
-    if (isError) {
-      return this.error(
-        "similar-function-name-high",
+    if (isHigh) {
+      return this.issue(
+        "similar-functions/similar-name-high",
+        funcA.location,
         `Function "${funcA.name}" is very similar to "${funcB.name}" (${pct}% match). ` +
           `This likely indicates duplicate code that should be consolidated.`,
-        funcA.location,
         {
           relatedLocations: [funcB.location],
           suggestion:
@@ -278,11 +300,11 @@ export class SimilarFunctionsLinter extends BaseLinter {
       );
     }
 
-    return this.warning(
-      "similar-function-name-medium",
+    return this.issue(
+      "similar-functions/similar-name-medium",
+      funcA.location,
       `Function "${funcA.name}" has similar name to "${funcB.name}" (${pct}% match). ` +
         `Review to ensure they serve distinct purposes.`,
-      funcA.location,
       {
         relatedLocations: [funcB.location],
         suggestion:
@@ -308,17 +330,17 @@ export class SimilarFunctionsLinter extends BaseLinter {
     funcA: FunctionInfo,
     funcB: FunctionInfo,
     _options: SimilarFunctionsOptions
-  ): Violation | null {
+  ): Issue | null {
     // Same name in different files is definitely suspicious
     const paramSimilarity = compareParams(funcA.params, funcB.params);
 
     if (paramSimilarity === 1) {
       // Identical signatures - likely duplicate
-      return this.error(
-        "duplicate-function",
+      return this.issue(
+        "similar-functions/duplicate-function",
+        funcA.location,
         `Function "${funcA.name}" exists in multiple files with identical signature. ` +
           `This is likely duplicate code that should be consolidated.`,
-        funcA.location,
         {
           relatedLocations: [funcB.location],
           suggestion:
@@ -339,11 +361,11 @@ export class SimilarFunctionsLinter extends BaseLinter {
       );
     } else {
       // Same name but different params - needs investigation
-      return this.error(
-        "same-name-different-params",
+      return this.issue(
+        "similar-functions/same-name-different-params",
+        funcA.location,
         `Function "${funcA.name}" exists in multiple files with DIFFERENT signatures. ` +
           `This is confusing and error-prone.`,
-        funcA.location,
         {
           relatedLocations: [funcB.location],
           suggestion:

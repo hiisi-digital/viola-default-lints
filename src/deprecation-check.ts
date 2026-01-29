@@ -19,11 +19,12 @@
 import {
     BaseLinter,
     type CodebaseData,
+    type Issue,
+    type IssueCatalog,
     type LinterConfig,
     type LinterDataRequirements,
     type LinterMeta,
     type SourceLocation,
-    type Violation,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -253,8 +254,45 @@ export class DeprecationCheckLinter extends BaseLinter {
     name: "Deprecation Check",
     description:
       "Detects @deprecated annotations and deprecation mentions that indicate code should be removed",
-    defaultSeverity: "error",
     docsUrl: "docs/PRINCIPLES.md",
+  };
+
+  readonly catalog: IssueCatalog = {
+    "deprecation-check/deprecated-annotation": {
+      category: "maintainability",
+      impact: "major",
+      description: "Found @deprecated annotation - deprecated code should be deleted, not marked",
+    },
+    "deprecation-check/deprecated-marker": {
+      category: "maintainability",
+      impact: "major",
+      description: "Found DEPRECATED marker - deprecated code should be deleted, not marked",
+    },
+    "deprecation-check/deprecated-mention": {
+      category: "maintainability",
+      impact: "minor",
+      description: "Found deprecation mention in code",
+    },
+    "deprecation-check/deprecated-legacy": {
+      category: "maintainability",
+      impact: "minor",
+      description: "Found legacy code reference that may indicate deprecated code",
+    },
+    "deprecation-check/deprecated-removal": {
+      category: "maintainability",
+      impact: "major",
+      description: "Found code marked for removal - should be deleted immediately",
+    },
+    "deprecation-check/deprecated-obsolete": {
+      category: "maintainability",
+      impact: "major",
+      description: "Found obsolete code marker - should be deleted immediately",
+    },
+    "deprecation-check/deprecated-warning": {
+      category: "maintainability",
+      impact: "minor",
+      description: "Found usage warning indicating code should not be used",
+    },
   };
 
   /**
@@ -266,8 +304,8 @@ export class DeprecationCheckLinter extends BaseLinter {
     files: true,
   };
 
-  lint(data: CodebaseData, config: LinterConfig): Violation[] {
-    const violations: Violation[] = [];
+  lint(data: CodebaseData, config: LinterConfig): Issue[] {
+    const issues: Issue[] = [];
     const options = getOptions(config);
 
     for (const file of data.files) {
@@ -281,26 +319,26 @@ export class DeprecationCheckLinter extends BaseLinter {
       // Extract deprecations from file content
       const deprecations = extractDeprecations(content, file.path, options);
 
-      // Create violations for each deprecation found
+      // Create issues for each deprecation found
       for (const deprecation of deprecations) {
-        violations.push(this.createDeprecationViolation(deprecation));
+        issues.push(this.createDeprecationIssue(deprecation));
       }
     }
 
-    return violations;
+    return issues;
   }
 
   /**
-   * Create a violation for a deprecation.
+   * Create an issue for a deprecation.
    */
-  private createDeprecationViolation(match: DeprecationMatch): Violation {
+  private createDeprecationIssue(match: DeprecationMatch): Issue {
     const typeLabel = getTypeLabel(match.type);
 
-    return this.error(
-      `deprecated-${match.type}`,
+    return this.issue(
+      `deprecation-check/deprecated-${match.type}`,
+      match.location,
       `Found ${typeLabel} in ${match.location.file}:${match.location.line}. ` +
         `Deprecated code should be DELETED, not marked.`,
-      match.location,
       {
         suggestion:
           `IMMEDIATE ACTION REQUIRED:\n` +

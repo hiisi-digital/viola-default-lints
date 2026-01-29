@@ -16,11 +16,12 @@ import {
     type CodebaseData,
     type ExportInfo,
     type ImportInfo,
+    Issue,
+    type IssueCatalog,
     type LinterConfig,
     type LinterDataRequirements,
     type LinterMeta,
     type SourceLocation,
-    type Violation,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -87,13 +88,6 @@ interface OrphanedCodeOptions {
    * @default false
    */
   checkDefaultExports?: boolean;
-
-  /**
-   * Minimum severity for orphaned exports.
-   * "info" for soft warnings, "warning" for attention needed, "error" for failures.
-   * @default "warning"
-   */
-  orphanedSeverity?: "error" | "warning" | "info";
 }
 
 const DEFAULT_OPTIONS: Required<OrphanedCodeOptions> = {
@@ -113,7 +107,6 @@ const DEFAULT_OPTIONS: Required<OrphanedCodeOptions> = {
   reexportCountsAsUsage: true,
   externalPatterns: [/^@std\//, /^npm:/, /^jsr:/, /^https?:\/\//, /^node:/],
   checkDefaultExports: false,
-  orphanedSeverity: "warning",
 };
 
 // =============================================================================
@@ -172,7 +165,14 @@ export class OrphanedCodeLinter extends BaseLinter {
     id: "orphaned-code",
     name: "Orphaned Code",
     description: "Detects exported symbols that are never imported",
-    defaultSeverity: "warning",
+  };
+
+  readonly catalog: IssueCatalog = {
+    "orphaned-code/orphaned-export": {
+      category: "maintainability",
+      impact: "minor",
+      description: "Exported symbol is never imported anywhere in the codebase",
+    },
   };
 
   readonly requirements: LinterDataRequirements = {
@@ -181,8 +181,8 @@ export class OrphanedCodeLinter extends BaseLinter {
     files: true,
   };
 
-  lint(data: CodebaseData, config: LinterConfig): Violation[] {
-    const violations: Violation[] = [];
+  lint(data: CodebaseData, config: LinterConfig): Issue[] {
+    const issues: Issue[] = [];
     const opts = this.getOptions(config);
 
     // Build maps of exports and imports
@@ -205,10 +205,10 @@ export class OrphanedCodeLinter extends BaseLinter {
         continue;
       }
 
-      violations.push(this.createOrphanedViolation(resolved, opts));
+      issues.push(this.createOrphanedIssue(resolved));
     }
 
-    return violations;
+    return issues;
   }
 
   /**
@@ -512,67 +512,32 @@ export class OrphanedCodeLinter extends BaseLinter {
   }
 
   /**
-   * Create a violation for an orphaned export.
+   * Create an issue for an orphaned export.
    */
-  private createOrphanedViolation(
-    resolved: ResolvedExport,
-    opts: Required<OrphanedCodeOptions>
-  ): Violation {
+  private createOrphanedIssue(resolved: ResolvedExport): Issue {
     const { export: exp, modulePath } = resolved;
     const kind = exp.kind === "unknown" ? "export" : exp.kind;
 
     const location: SourceLocation = exp.location;
 
-    const baseViolation = {
-      code: "orphaned-export",
-      message:
-        `Exported ${kind} "${exp.name}" is never imported anywhere in the codebase. ` +
-        `This may be dead code.`,
+    return this.issue(
+      "orphaned-code/orphaned-export",
       location,
-      suggestion:
-        `Consider: (1) Remove the export if it's unused, ` +
-        `(2) Remove the entire symbol if the code is dead, or ` +
-        `(3) Add this file/export to entryPointPatterns if it's intentional public API.`,
-      context: {
-        exportName: exp.name,
-        exportKind: kind,
-        file: modulePath,
-        isTypeOnly: exp.isTypeOnly,
-      },
-    };
-
-    switch (opts.orphanedSeverity) {
-      case "error":
-        return this.error(
-          baseViolation.code,
-          baseViolation.message,
-          baseViolation.location,
-          {
-            suggestion: baseViolation.suggestion,
-            context: baseViolation.context,
-          }
-        );
-      case "info":
-        return this.info(
-          baseViolation.code,
-          baseViolation.message,
-          baseViolation.location,
-          {
-            suggestion: baseViolation.suggestion,
-            context: baseViolation.context,
-          }
-        );
-      default:
-        return this.warning(
-          baseViolation.code,
-          baseViolation.message,
-          baseViolation.location,
-          {
-            suggestion: baseViolation.suggestion,
-            context: baseViolation.context,
-          }
-        );
-    }
+      `Exported ${kind} "${exp.name}" is never imported anywhere in the codebase. ` +
+        `This may be dead code.`,
+      {
+        suggestion:
+          `Consider: (1) Remove the export if it's unused, ` +
+          `(2) Remove the entire symbol if the code is dead, or ` +
+          `(3) Add this file/export to entryPointPatterns if it's intentional public API.`,
+        context: {
+          exportName: exp.name,
+          exportKind: kind,
+          file: modulePath,
+          isTypeOnly: exp.isTypeOnly,
+        },
+      }
+    );
   }
 }
 
