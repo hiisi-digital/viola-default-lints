@@ -15,10 +15,11 @@
 import {
     BaseLinter,
     type CodebaseData,
+    type Issue,
+    type IssueCatalog,
     type LinterConfig,
     type LinterDataRequirements,
     type LinterMeta,
-    type Violation
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -113,8 +114,20 @@ export class TypeLocationLinter extends BaseLinter {
     name: "Type Location",
     description:
       "Enforces that types are in types/ directories and logic is not in types packages",
-    defaultSeverity: "error",
     docsUrl: "docs/PRINCIPLES.md",
+  };
+
+  readonly catalog: IssueCatalog = {
+    "type-location/type-outside-types": {
+      category: "consistency",
+      impact: "major",
+      description: "Type declared outside types package",
+    },
+    "type-location/logic-in-types": {
+      category: "consistency",
+      impact: "major",
+      description: "Logic found in types-only package",
+    },
   };
 
   readonly requirements: LinterDataRequirements = {
@@ -122,8 +135,8 @@ export class TypeLocationLinter extends BaseLinter {
     files: true,
   };
 
-  lint(data: CodebaseData, _config: LinterConfig): Violation[] {
-    const violations: Violation[] = [];
+  lint(data: CodebaseData, _config: LinterConfig): Issue[] {
+    const issues: Issue[] = [];
 
     for (const file of data.files) {
       const inTypesPackage = this.isTypesOnlyPackage(file.path);
@@ -132,14 +145,14 @@ export class TypeLocationLinter extends BaseLinter {
 
       if (inTypesPackage && !isLogicAllowed) {
         // Check for logic in types package
-        violations.push(...this.checkLogicInTypesFile(file, data));
+        issues.push(...this.checkLogicInTypesFile(file, data));
       } else if (!inTypesPackage && !isAllowedTypeFile) {
         // Check for types outside types package
-        violations.push(...this.checkTypesOutsideTypesPackage(file));
+        issues.push(...this.checkTypesOutsideTypesPackage(file));
       }
     }
 
-    return violations;
+    return issues;
   }
 
   /**
@@ -185,16 +198,15 @@ export class TypeLocationLinter extends BaseLinter {
    */
   private checkTypesOutsideTypesPackage(
     file: { path: string; types: readonly { name: string; location: { line: number } }[] }
-  ): Violation[] {
-    const violations: Violation[] = [];
+  ): Issue[] {
+    const issues: Issue[] = [];
 
     for (const type of file.types) {
-      violations.push(
-        this.error(
+      issues.push(
+        this.issue(
           "type-outside-types",
-          `Type/interface "${type.name}" declared outside types package. ` +
-            `Move to packages/types/ or a local types/ directory.`,
           { file: file.path, line: type.location.line },
+          `Type/interface "${type.name}" declared outside types package.`,
           {
             suggestion:
               "1. Move to packages/types/ (if shared)\n" +
@@ -205,7 +217,7 @@ export class TypeLocationLinter extends BaseLinter {
       );
     }
 
-    return violations;
+    return issues;
   }
 
   /**
@@ -215,17 +227,16 @@ export class TypeLocationLinter extends BaseLinter {
   private checkLogicInTypesFile(
     file: { path: string; functions: readonly { name: string; location: { line: number } }[] },
     _data: CodebaseData
-  ): Violation[] {
-    const violations: Violation[] = [];
+  ): Issue[] {
+    const issues: Issue[] = [];
 
     // Functions in types files are definitely logic
     for (const func of file.functions) {
-      violations.push(
-        this.error(
+      issues.push(
+        this.issue(
           "logic-in-types",
-          `Function "${func.name}" found in types package. ` +
-            `Move to a specially-named file (*.helpers.ts, *.factory.ts, etc.)`,
           { file: file.path, line: func.location.line },
+          `Function "${func.name}" found in types package.`,
           {
             suggestion:
               "Move to one of:\n" +
@@ -240,7 +251,7 @@ export class TypeLocationLinter extends BaseLinter {
       );
     }
 
-    return violations;
+    return issues;
   }
 }
 

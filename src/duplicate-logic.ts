@@ -14,13 +14,14 @@ import {
     compareCodeBodies,
     type FunctionInfo,
     hashCodeBody,
+    type Issue,
+    type IssueCatalog,
     type LinterConfig,
     type LinterDataRequirements,
     type LinterMeta,
     normalizeCode,
     type SimilarityLevel,
     type SourceLocation,
-    type Violation,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -137,7 +138,19 @@ export class DuplicateLogicLinter extends BaseLinter {
     id: "duplicate-logic",
     name: "Duplicate Logic",
     description: "Detects functions with similar implementations",
-    defaultSeverity: "warning",
+  };
+
+  readonly catalog: IssueCatalog = {
+    "duplicate-logic/exact-duplicate": {
+      category: "maintainability",
+      impact: "critical",
+      description: "Two functions have identical implementations. Consider extracting to a shared function.",
+    },
+    "duplicate-logic/similar-implementation": {
+      category: "maintainability",
+      impact: "major",
+      description: "Two functions have very similar implementations. Consider consolidating.",
+    },
   };
 
   readonly requirements: LinterDataRequirements = {
@@ -145,27 +158,27 @@ export class DuplicateLogicLinter extends BaseLinter {
     files: true,
   };
 
-  lint(data: CodebaseData, config: LinterConfig): Violation[] {
-    const violations: Violation[] = [];
+  lint(data: CodebaseData, config: LinterConfig): Issue[] {
+    const issues: Issue[] = [];
     const opts = this.getOptions(config);
 
     // Collect and prepare functions for comparison
     const functions = this.prepareFunctions(data, opts);
 
     if (functions.length < 2) {
-      return violations;
+      return issues;
     }
 
     // Find duplicates
     const pairs = this.findDuplicates(functions, opts);
 
-    // Convert pairs to violations
+    // Convert pairs to issues
     for (const pair of pairs) {
-      const violation = this.pairToViolation(pair, opts, config);
-      violations.push(violation);
+      const issue = this.pairToIssue(pair, opts);
+      issues.push(issue);
     }
 
-    return violations;
+    return issues;
   }
 
   /**
@@ -372,13 +385,12 @@ export class DuplicateLogicLinter extends BaseLinter {
   }
 
   /**
-   * Convert a duplicate pair to a violation.
+   * Convert a duplicate pair to an issue.
    */
-  private pairToViolation(
+  private pairToIssue(
     pair: DuplicatePair,
-    opts: Required<DuplicateLogicOptions>,
-    config: LinterConfig
-  ): Violation {
+    opts: Required<DuplicateLogicOptions>
+  ): Issue {
     const { func1, func2, similarity, isExact } = pair;
     const similarityPct = Math.round(similarity * 100);
 
@@ -388,11 +400,11 @@ export class DuplicateLogicLinter extends BaseLinter {
     const relatedLocations: SourceLocation[] = [func2.location];
 
     if (isExact && opts.errorOnExact) {
-      return this.error(
+      return this.issue(
         "exact-duplicate",
+        func1.location,
         `Function "${name1}" is an exact duplicate of "${name2}". ` +
           `Consider extracting to a shared function.`,
-        func1.location,
         {
           relatedLocations,
           suggestion:
@@ -408,13 +420,12 @@ export class DuplicateLogicLinter extends BaseLinter {
       );
     }
 
-    return this.createViolation(
+    return this.issue(
+      "similar-implementation",
+      func1.location,
+      `Function "${name1}" has ${similarityPct}% similar implementation to "${name2}". ` +
+        `Consider consolidating.`,
       {
-        code: "similar-implementation",
-        message:
-          `Function "${name1}" has ${similarityPct}% similar implementation to "${name2}". ` +
-          `Consider consolidating.`,
-        location: func1.location,
         relatedLocations,
         suggestion:
           "Review both functions and consider extracting common logic into a shared helper.",
@@ -425,8 +436,7 @@ export class DuplicateLogicLinter extends BaseLinter {
           file1: func1.location.file,
           file2: func2.location.file,
         },
-      },
-      config
+      }
     );
   }
 }

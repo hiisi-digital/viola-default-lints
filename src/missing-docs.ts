@@ -10,10 +10,11 @@
 import {
     BaseLinter,
     type CodebaseData,
+    type Issue,
+    type IssueCatalog,
     type LinterConfig,
     type LinterDataRequirements,
     type LinterMeta,
-    type Violation,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -100,7 +101,29 @@ export class MissingDocsLinter extends BaseLinter {
     id: "missing-docs",
     name: "Missing Documentation",
     description: "Detects exported items without JSDoc documentation",
-    defaultSeverity: "warning",
+  };
+
+  readonly catalog: IssueCatalog = {
+    "missing-docs/missing-function-docs": {
+      category: "maintainability",
+      impact: "minor",
+      description: "Exported function lacks JSDoc documentation",
+    },
+    "missing-docs/missing-type-docs": {
+      category: "maintainability",
+      impact: "minor",
+      description: "Exported type or interface lacks JSDoc documentation",
+    },
+    "missing-docs/missing-param-doc": {
+      category: "maintainability",
+      impact: "trivial",
+      description: "Function JSDoc is missing @param documentation for a parameter",
+    },
+    "missing-docs/missing-returns-doc": {
+      category: "maintainability",
+      impact: "trivial",
+      description: "Function JSDoc is missing @returns documentation",
+    },
   };
 
   readonly requirements: LinterDataRequirements = {
@@ -109,8 +132,8 @@ export class MissingDocsLinter extends BaseLinter {
     files: true,
   };
 
-  lint(data: CodebaseData, config: LinterConfig): Violation[] {
-    const violations: Violation[] = [];
+  lint(data: CodebaseData, config: LinterConfig): Issue[] {
+    const issues: Issue[] = [];
     const opts = this.getOptions(config);
 
     for (const file of data.files) {
@@ -134,11 +157,11 @@ export class MissingDocsLinter extends BaseLinter {
 
           // Check for JSDoc
           if (!func.jsDoc || func.jsDoc.trim() === "") {
-            violations.push(
-              this.warning(
-                "missing-function-docs",
-                `Exported function "${func.name}" lacks JSDoc documentation.`,
+            issues.push(
+              this.issue(
+                "missing-docs/missing-function-docs",
                 func.location,
+                `Exported function "${func.name}" lacks JSDoc documentation.`,
                 {
                   suggestion:
                     "Add a JSDoc comment describing what this function does, its parameters, and return value.",
@@ -153,13 +176,13 @@ export class MissingDocsLinter extends BaseLinter {
           } else {
             // Check for incomplete docs if required
             const docIssues = this.checkDocCompleteness(func, opts);
-            for (const issue of docIssues) {
-              violations.push(
-                this.info(
-                  issue.code,
-                  issue.message,
+            for (const docIssue of docIssues) {
+              issues.push(
+                this.issue(
+                  docIssue.code,
                   func.location,
-                  { suggestion: issue.suggestion }
+                  docIssue.message,
+                  { suggestion: docIssue.suggestion }
                 )
               );
             }
@@ -178,11 +201,11 @@ export class MissingDocsLinter extends BaseLinter {
 
           // Check for JSDoc
           if (!type.jsDoc || type.jsDoc.trim() === "") {
-            violations.push(
-              this.warning(
-                "missing-type-docs",
-                `Exported ${type.kind} "${type.name}" lacks JSDoc documentation.`,
+            issues.push(
+              this.issue(
+                "missing-docs/missing-type-docs",
                 type.location,
+                `Exported ${type.kind} "${type.name}" lacks JSDoc documentation.`,
                 {
                   suggestion:
                     `Add a JSDoc comment describing what this ${type.kind} represents.`,
@@ -199,7 +222,7 @@ export class MissingDocsLinter extends BaseLinter {
       }
     }
 
-    return violations;
+    return issues;
   }
 
   /**
@@ -285,7 +308,7 @@ export class MissingDocsLinter extends BaseLinter {
         const paramPattern = new RegExp(`@param\\s+(?:\\{[^}]+\\}\\s+)?${param.name}\\b`);
         if (!paramPattern.test(jsDoc)) {
           issues.push({
-            code: "missing-param-doc",
+            code: "missing-docs/missing-param-doc",
             message: `Function "${func.name}" is missing @param documentation for "${param.name}".`,
             suggestion: `Add @param ${param.name} - description`,
           });
@@ -302,7 +325,7 @@ export class MissingDocsLinter extends BaseLinter {
       
       if (hasReturn && !hasReturnsTag) {
         issues.push({
-          code: "missing-returns-doc",
+          code: "missing-docs/missing-returns-doc",
           message: `Function "${func.name}" is missing @returns documentation.`,
           suggestion: "Add @returns description of the return value",
         });

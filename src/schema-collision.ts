@@ -11,13 +11,14 @@
 import {
     BaseLinter,
     type CodebaseData,
+    type Issue,
+    type IssueCatalog,
     type LinterConfig,
     type LinterDataRequirements,
     type LinterMeta,
     type SchemaInfo,
     type SourceLocation,
     type TypeInfo,
-    type Violation,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -118,7 +119,24 @@ export class SchemaCollisionLinter extends BaseLinter {
     id: "schema-collision",
     name: "Schema Name Collision",
     description: "Detects naming conflicts between schemas and types",
-    defaultSeverity: "error",
+  };
+
+  readonly catalog: IssueCatalog = {
+    "schema-collision/exact-name-collision": {
+      category: "correctness",
+      impact: "critical",
+      description: "Type has the same name as a schema, violating schema-first workflow",
+    },
+    "schema-collision/case-insensitive-collision": {
+      category: "consistency",
+      impact: "major",
+      description: "Type differs from schema only by case, causing potential confusion",
+    },
+    "schema-collision/variant-name-collision": {
+      category: "maintainability",
+      impact: "minor",
+      description: "Type appears to be a variant of a schema name, indicating potential duplicate definitions",
+    },
   };
 
   readonly requirements: LinterDataRequirements = {
@@ -127,13 +145,13 @@ export class SchemaCollisionLinter extends BaseLinter {
     files: true,
   };
 
-  lint(data: CodebaseData, config: LinterConfig): Violation[] {
-    const violations: Violation[] = [];
+  lint(data: CodebaseData, config: LinterConfig): Issue[] {
+    const issues: Issue[] = [];
     const opts = this.getOptions(config);
 
     // If no schemas, nothing to check
     if (data.schemas.length === 0) {
-      return violations;
+      return issues;
     }
 
     // Build lookup maps for schemas
@@ -180,12 +198,12 @@ export class SchemaCollisionLinter extends BaseLinter {
         );
 
         for (const collision of collisions) {
-          violations.push(this.collisionToViolation(collision, config));
+          issues.push(this.collisionToIssue(collision));
         }
       }
     }
 
-    return violations;
+    return issues;
   }
 
   /**
@@ -349,12 +367,9 @@ export class SchemaCollisionLinter extends BaseLinter {
   }
 
   /**
-   * Convert a collision to a violation.
+   * Convert a collision to an issue.
    */
-  private collisionToViolation(
-    collision: CollisionInfo,
-    config: LinterConfig
-  ): Violation {
+  private collisionToIssue(collision: CollisionInfo): Issue {
     const { schema, type, matchType, variantKind } = collision;
 
     const schemaLocation: SourceLocation = {
@@ -364,11 +379,11 @@ export class SchemaCollisionLinter extends BaseLinter {
 
     switch (matchType) {
       case "exact":
-        return this.error(
-          "exact-name-collision",
+        return this.issue(
+          "schema-collision/exact-name-collision",
+          type.location,
           `Type "${type.name}" has the same name as schema "${schema.name}". ` +
             `In a schema-first workflow, types should be generated from schemas, not manually defined.`,
-          type.location,
           {
             relatedLocations: [schemaLocation],
             suggestion:
@@ -385,11 +400,11 @@ export class SchemaCollisionLinter extends BaseLinter {
         );
 
       case "case-insensitive":
-        return this.warning(
-          "case-insensitive-collision",
+        return this.issue(
+          "schema-collision/case-insensitive-collision",
+          type.location,
           `Type "${type.name}" differs from schema "${schema.name}" only by case. ` +
             `This could cause confusion.`,
-          type.location,
           {
             relatedLocations: [schemaLocation],
             suggestion:
@@ -404,13 +419,12 @@ export class SchemaCollisionLinter extends BaseLinter {
         );
 
       case "variant":
-        return this.createViolation(
+        return this.issue(
+          "schema-collision/variant-name-collision",
+          type.location,
+          `Type "${type.name}" appears to be a variant of schema "${schema.name}" ` +
+            `(${variantKind ?? "naming pattern"}). This may indicate duplicate definitions.`,
           {
-            code: "variant-name-collision",
-            message:
-              `Type "${type.name}" appears to be a variant of schema "${schema.name}" ` +
-              `(${variantKind ?? "naming pattern"}). This may indicate duplicate definitions.`,
-            location: type.location,
             relatedLocations: [schemaLocation],
             suggestion:
               `If this type represents the same data as the schema, consider: ` +
@@ -422,8 +436,7 @@ export class SchemaCollisionLinter extends BaseLinter {
               schemaFile: schema.file,
               variantKind,
             },
-          },
-          config
+          }
         );
     }
   }
