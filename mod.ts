@@ -8,13 +8,15 @@
  *
  * ```ts
  * // viola.config.ts
- * import { viola } from "@hiisi/viola";
+ * import { viola, report, when } from "@hiisi/viola";
  * import defaultLints from "@hiisi/viola-default-lints";
  *
  * export default viola()
  *   .use(defaultLints)  // adds linters + default rules
- *   .rule(report.off, when.in("**\/*_test.ts"));  // your overrides
+ *   .rule(report.off, when.in("**\/*_test.ts"));  // your overrides (last wins!)
  * ```
+ *
+ * Rules use "last wins" semantics (like CSS) - your rules after `.use()` override plugin defaults.
  *
  * ### Without Default Rules
  *
@@ -126,10 +128,11 @@ export const linters = [
  * Default lints plugin.
  *
  * Adds all linters and configures sensible default rules:
- * - Critical impact → error
- * - Major impact → error
+ * - Critical/Major impact → error
  * - Minor impact → warn
  * - Trivial impact → info
+ *
+ * Your rules defined after `.use(defaultLints)` override these (last wins).
  */
 const defaultLints: ViolaPlugin = {
     build(viola: ViolaBuilder): void {
@@ -139,7 +142,7 @@ const defaultLints: ViolaPlugin = {
         }
 
         // Default rules based on impact severity
-        // These are checked AFTER user rules due to internal ordering
+        // User rules after .use() override these (last wins)
         viola
             .rule(report.error, when.impact.atLeast(Impact.Major))
             .rule(report.warn, when.impact.is(Impact.Minor))
