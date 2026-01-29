@@ -312,3 +312,8 @@ export class MissingDocsLinter extends BaseLinter {
     return issues;
   }
 }
+
+/**
+ * Default instance for registration.
+ */
+export const missingDocsLinter: MissingDocsLinter = new MissingDocsLinter();

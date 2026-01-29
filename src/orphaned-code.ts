@@ -575,3 +575,8 @@ export class OrphanedCodeLinter extends BaseLinter {
     }
   }
 }
+
+/**
+ * Default instance for registration.
+ */
+export const orphanedCodeLinter: OrphanedCodeLinter = new OrphanedCodeLinter();

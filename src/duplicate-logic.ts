@@ -430,3 +430,8 @@ export class DuplicateLogicLinter extends BaseLinter {
     );
   }
 }
+
+/**
+ * Default instance for registration.
+ */
+export const duplicateLogicLinter: DuplicateLogicLinter = new DuplicateLogicLinter();
