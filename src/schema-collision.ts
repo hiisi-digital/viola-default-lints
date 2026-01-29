@@ -428,3 +428,8 @@ export class SchemaCollisionLinter extends BaseLinter {
     }
   }
 }
+
+/**
+ * Default instance for registration.
+ */
+export const schemaCollisionLinter: SchemaCollisionLinter = new SchemaCollisionLinter();

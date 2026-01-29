@@ -11,7 +11,7 @@
  * ```json
  * {
  *   "viola": {
- *     "plugins": ["@hiisi/viola-linters"],
+ *     "plugins": ["@hiisi/viola-default-lints"],
  *     "**\/*.ts": {
  *       "*>=major": "error",
  *       "*>=minor": "warn"
@@ -23,7 +23,7 @@
  * Or import individual linters:
  *
  * ```ts
- * import { typeLocationLinter, similarFunctionsLinter } from "@hiisi/viola-linters";
+ * import { typeLocationLinter, similarFunctionsLinter } from "@hiisi/viola-default-lints";
  * ```
  *
  * @module

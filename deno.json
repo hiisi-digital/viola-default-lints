@@ -1,5 +1,5 @@
 {
-  "name": "@hiisi/viola-linters",
+  "name": "@hiisi/viola-default-lints",
   "version": "0.1.0",
   "exports": {
     ".": "./mod.ts"
@@ -16,7 +16,7 @@
     ]
   },
   "imports": {
-    "@hiisi/viola": "../../mod.ts",
+    "@hiisi/viola": "jsr:@hiisi/viola@^0.1",
     "@std/assert": "jsr:@std/assert@^1"
   },
   "compilerOptions": {
