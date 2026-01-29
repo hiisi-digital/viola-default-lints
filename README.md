@@ -46,7 +46,7 @@ Run with CLI:
 deno run -A jsr:@hiisi/viola-cli
 ```
 
-Your rules are always checked **before** plugin rules (first match wins), so you can override the defaults.
+Rules use **"last wins" semantics** (like CSS). Your rules come after plugin rules, so they take precedence.
 
 ### Without Default Rules
 
@@ -103,7 +103,7 @@ export default viola()
 
 ## Default Rules
 
-The plugin configures these rules (checked after your rules):
+The plugin configures these rules (your rules after `.use()` override them):
 
 ```ts
 .rule(report.error, when.impact.atLeast(Impact.Major))
