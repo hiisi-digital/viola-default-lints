@@ -22,56 +22,67 @@ use them as a starting point for your own, or write completely custom linters.
 ## Installation
 
 ```bash
-deno add jsr:@hiisi/viola-default-lints
-```
-
-You'll also need the viola runtime:
-
-```bash
-deno add jsr:@hiisi/viola
+deno add jsr:@hiisi/viola jsr:@hiisi/viola-default-lints
 ```
 
 ## Usage
 
-### With viola-cli
+Create a `viola.config.ts`:
 
-Add to your `deno.json`:
+```ts
+import { viola } from "@hiisi/viola";
+import { defaultLints } from "@hiisi/viola-default-lints";
 
-```json
-{
-  "viola": {
-    "plugins": ["jsr:@hiisi/viola-default-lints"]
-  }
-}
+export default viola()
+  .use(defaultLints)
+  .error(">=major")
+  .warn("=minor")
+  .in("**/*_test.ts").off();
 ```
 
-Then run:
+Run with CLI:
 
 ```bash
 deno run -A jsr:@hiisi/viola-cli
 ```
 
-### Programmatic Usage
+### Configure Linter Settings
 
 ```ts
-import { runViola } from "@hiisi/viola";
+import { viola } from "@hiisi/viola";
+import { defaultLints } from "@hiisi/viola-default-lints";
 
-const results = await runViola({
-  plugins: ["jsr:@hiisi/viola-default-lints"],
-  include: ["src"],
-});
+export default viola()
+  .use(defaultLints)
+  .set("similar-functions.threshold", 0.8)
+  .set("duplicate-strings.minLength", 10)
+  .error(">=major")
+  .warn("=minor");
+```
+
+### Per-Scope Settings
+
+```ts
+export default viola()
+  .use(defaultLints)
+  .set("similar-functions.threshold", 0.85)
+  .error(">=major")
+  
+  .in("packages/core/**")
+    .set("similar-functions.threshold", 0.95)  // stricter in core
+    .error(">=minor");
 ```
 
 ### Import Individual Linters
 
 ```ts
-import { TypeLocationLinter, SimilarFunctionsLinter } from "@hiisi/viola-default-lints";
-import { registry, runLinters } from "@hiisi/viola";
+import { viola } from "@hiisi/viola";
+import { typeLocation, similarFunctions } from "@hiisi/viola-default-lints";
 
-registry.register(new TypeLocationLinter());
-registry.register(new SimilarFunctionsLinter());
-
-const results = await runLinters({ include: ["src"] });
+export default viola()
+  .use(typeLocation)
+  .use(similarFunctions)
+  .error(">=major");
 ```
 
 ## Available Linters
@@ -87,26 +98,6 @@ const results = await runLinters({ include: ["src"] });
 | `missing-docs` | Find exports without documentation |
 | `orphaned-code` | Find unused internal code |
 | `schema-collision` | Find conflicting schema definitions |
-
-## Configuration
-
-Configure individual linters via the `linters` field:
-
-```json
-{
-  "viola": {
-    "plugins": ["jsr:@hiisi/viola-default-lints"],
-    "linters": {
-      "similar-functions": {
-        "threshold": 0.8
-      },
-      "duplicate-strings": {
-        "minLength": 10
-      }
-    }
-  }
-}
-```
 
 ## Writing Your Own Linters
 
