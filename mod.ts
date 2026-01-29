@@ -1,29 +1,32 @@
 /**
- * Viola Linters Package
+ * Viola Default Lints Plugin
  *
- * A collection of linters for the viola convention linter.
- * This package is loaded as a plugin via the viola plugin system.
+ * A collection of linters for the viola convention linter with sensible
+ * default rules for classifying issues by severity.
  *
  * ## Usage
  *
- * Add to your `deno.json` viola configuration:
+ * ```ts
+ * // viola.config.ts
+ * import { viola } from "@hiisi/viola";
+ * import defaultLints from "@hiisi/viola-default-lints";
  *
- * ```json
- * {
- *   "viola": {
- *     "plugins": ["@hiisi/viola-default-lints"],
- *     "**\/*.ts": {
- *       "*>=major": "error",
- *       "*>=minor": "warn"
- *     }
- *   }
- * }
+ * export default viola()
+ *   .use(defaultLints)  // adds linters + default rules
+ *   .rule(report.off, when.in("**\/*_test.ts"));  // your overrides
  * ```
  *
- * Or import individual linters:
+ * ### Without Default Rules
+ *
+ * If you want just the linters without default rules, import `linters`:
  *
  * ```ts
- * import { typeLocationLinter, similarFunctionsLinter } from "@hiisi/viola-default-lints";
+ * import { viola } from "@hiisi/viola";
+ * import { linters } from "@hiisi/viola-default-lints";
+ *
+ * export default viola()
+ *   .add(linters)  // just linters, define your own rules
+ *   .rule(report.error, when.impact.atLeast(Impact.Critical));
  * ```
  *
  * @module
@@ -83,10 +86,16 @@ export {
 } from "./src/type-location.ts";
 
 // =============================================================================
-// Linters Array (for plugin discovery)
+// Plugin Implementation
 // =============================================================================
 
-import type { BaseLinter } from "@hiisi/viola";
+import {
+    Impact,
+    report,
+    type ViolaBuilder,
+    type ViolaPlugin,
+    when
+} from "@hiisi/viola";
 import { deprecationCheckLinter } from "./src/deprecation-check.ts";
 import { duplicateLogicLinter } from "./src/duplicate-logic.ts";
 import { duplicateStringsLinter } from "./src/duplicate-strings.ts";
@@ -99,9 +108,9 @@ import { typeLocationLinter } from "./src/type-location.ts";
 
 /**
  * All linters as an array.
- * This is the preferred export for plugin discovery.
+ * Use this if you want just linters without default rules.
  */
-export const linters: BaseLinter[] = [
+export const linters = [
     typeLocationLinter,
     similarFunctionsLinter,
     similarTypesLinter,
@@ -114,6 +123,31 @@ export const linters: BaseLinter[] = [
 ];
 
 /**
- * Default export is the linters array for convenience.
+ * Default lints plugin.
+ *
+ * Adds all linters and configures sensible default rules:
+ * - Critical impact → error
+ * - Major impact → error
+ * - Minor impact → warn
+ * - Trivial impact → info
  */
-export default linters;
+const defaultLints: ViolaPlugin = {
+    build(viola: ViolaBuilder): void {
+        // Add all linters
+        for (const linter of linters) {
+            viola.add(linter);
+        }
+
+        // Default rules based on impact severity
+        // These are checked AFTER user rules due to internal ordering
+        viola
+            .rule(report.error, when.impact.atLeast(Impact.Major))
+            .rule(report.warn, when.impact.is(Impact.Minor))
+            .rule(report.info, when.impact.is(Impact.Trivial));
+    }
+};
+
+/**
+ * Default export is the plugin for easy use with viola().use(defaultLints)
+ */
+export default defaultLints;
