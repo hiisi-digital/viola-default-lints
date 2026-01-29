@@ -4,17 +4,20 @@
 
 [![JSR](https://jsr.io/badges/@hiisi/viola-default-lints)](https://jsr.io/@hiisi/viola-default-lints)
 [![GitHub Issues](https://img.shields.io/github/issues/hiisi-digital/viola-default-lints.svg)](https://github.com/hiisi-digital/viola-default-lints/issues)
-![License](https://img.shields.io/github/license/hiisi-digital/viola-default-lints?color=%23009689)
+![License](https://img.shields.io/github/license/viola-default-lints?color=%23009689)
 
-> Default linters for the viola convention linter.
+> A collection of convention linters for viola.
 
 </div>
 
 ## What it does
 
-This package provides a set of linters for [viola](https://jsr.io/@hiisi/viola), a convention
-linter for codebases. These linters check for common issues like code duplication, naming
-conventions, documentation gaps, and file organization problems.
+This package provides a set of opinionated convention linters that work with the
+[viola](https://jsr.io/@hiisi/viola) runtime. These linters check for common issues like
+code duplication, naming conventions, documentation gaps, and file organization problems.
+
+This is one example of a linter collection for viola. You can use these linters as-is,
+use them as a starting point for your own, or write completely custom linters.
 
 ## Installation
 
@@ -22,29 +25,56 @@ conventions, documentation gaps, and file organization problems.
 deno add jsr:@hiisi/viola-default-lints
 ```
 
+You'll also need the viola runtime:
+
+```bash
+deno add jsr:@hiisi/viola
+```
+
 ## Usage
 
-Add to your `deno.json` viola configuration:
+### With viola-cli
+
+Add to your `deno.json`:
 
 ```json
 {
   "viola": {
-    "plugins": ["@hiisi/viola-default-lints"],
-    "**/*.ts": {
-      "*>=major": "error",
-      "*>=minor": "warn"
-    }
+    "plugins": ["jsr:@hiisi/viola-default-lints"]
   }
 }
 ```
 
-Or import individual linters:
+Then run:
 
-```ts
-import { typeLocationLinter, similarFunctionsLinter } from "@hiisi/viola-default-lints";
+```bash
+deno run -A jsr:@hiisi/viola-cli
 ```
 
-## Linters
+### Programmatic Usage
+
+```ts
+import { runViola } from "@hiisi/viola";
+
+const results = await runViola({
+  plugins: ["jsr:@hiisi/viola-default-lints"],
+  include: ["src"],
+});
+```
+
+### Import Individual Linters
+
+```ts
+import { TypeLocationLinter, SimilarFunctionsLinter } from "@hiisi/viola-default-lints";
+import { registry, runLinters } from "@hiisi/viola";
+
+registry.register(new TypeLocationLinter());
+registry.register(new SimilarFunctionsLinter());
+
+const results = await runLinters({ include: ["src"] });
+```
+
+## Available Linters
 
 | Linter | Description |
 |--------|-------------|
@@ -57,6 +87,31 @@ import { typeLocationLinter, similarFunctionsLinter } from "@hiisi/viola-default
 | `missing-docs` | Find exports without documentation |
 | `orphaned-code` | Find unused internal code |
 | `schema-collision` | Find conflicting schema definitions |
+
+## Configuration
+
+Configure individual linters via the `linters` field:
+
+```json
+{
+  "viola": {
+    "plugins": ["jsr:@hiisi/viola-default-lints"],
+    "linters": {
+      "similar-functions": {
+        "threshold": 0.8
+      },
+      "duplicate-strings": {
+        "minLength": 10
+      }
+    }
+  }
+}
+```
+
+## Writing Your Own Linters
+
+See the [viola documentation](https://jsr.io/@hiisi/viola) for how to create custom linters
+using the `BaseLinter` class. The linters in this package serve as examples.
 
 ## Support
 
