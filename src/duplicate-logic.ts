@@ -70,6 +70,18 @@ interface DuplicateLogicOptions {
   ignoreFunctionPatterns?: RegExp[];
 
   /**
+   * Explicit list of function names to ignore. Use this as an escape hatch for
+   * functions that are intentionally similar by design.
+   * 
+   * Unlike patterns, this requires you to explicitly list each function,
+   * forcing you to think about whether the similarity is truly intentional.
+   * 
+   * @default []
+   * @example ["impactCond", "categoryCond", "fileCond"]
+   */
+  ignoreFunctions?: string[];
+
+  /**
    * File patterns to exclude from checking.
    * @default [/\.test\.ts$/, /\.spec\.ts$/, /_test\.ts$/]
    */
@@ -95,6 +107,7 @@ const DEFAULT_OPTIONS: Required<DuplicateLogicOptions> = {
   crossFile: true,
   differentNamesOnly: false,
   ignoreFunctionPatterns: [],
+  ignoreFunctions: [],
   ignoreFilePatterns: [/\.test\.ts$/, /\.spec\.ts$/, /_test\.ts$/],
   maxPairs: 50,
   errorOnExact: true,
@@ -193,6 +206,10 @@ export class DuplicateLogicLinter extends BaseLinter {
         ...DEFAULT_OPTIONS.ignoreFunctionPatterns,
         ...(userOpts.ignoreFunctionPatterns ?? []),
       ],
+      ignoreFunctions: [
+        ...DEFAULT_OPTIONS.ignoreFunctions,
+        ...(userOpts.ignoreFunctions ?? []),
+      ],
       ignoreFilePatterns: [
         ...DEFAULT_OPTIONS.ignoreFilePatterns,
         ...(userOpts.ignoreFilePatterns ?? []),
@@ -243,7 +260,12 @@ export class DuplicateLogicLinter extends BaseLinter {
     func: FunctionInfo,
     opts: Required<DuplicateLogicOptions>
   ): boolean {
-    // Skip ignored function names
+    // Skip explicitly ignored function names
+    if (func.name && opts.ignoreFunctions.includes(func.name)) {
+      return false;
+    }
+
+    // Skip function names matching ignore patterns
     if (func.name && opts.ignoreFunctionPatterns.some((p) => p.test(func.name))) {
       return false;
     }

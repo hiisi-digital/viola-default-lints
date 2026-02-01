@@ -46,12 +46,24 @@ export interface SimilarTypesOptions {
   warningThreshold?: number;
   /** Threshold for error level */
   errorThreshold?: number;
-  /** Ignore types with fewer fields than this */
+  /** Minimum number of fields a type must have to check */
   minFieldCount?: number;
   /** Ignore types with names shorter than this */
   minNameLength?: number;
   /** Patterns for type names to ignore */
   ignorePatterns?: RegExp[];
+
+  /**
+   * Explicit list of type names to ignore. Use this as an escape hatch for
+   * types that are intentionally similar by design.
+   * 
+   * Unlike patterns, this requires you to explicitly list each type,
+   * forcing you to think about whether the similarity is truly intentional.
+   * 
+   * @default []
+   * @example ["FileCondition", "LinterCondition"]
+   */
+  ignoreTypes?: string[];
   /** Also check for identical field structures */
   checkFieldStructure?: boolean;
   /** Minimum field similarity for structural match */
@@ -70,13 +82,10 @@ const DEFAULT_OPTIONS: SimilarTypesOptions = {
   ignorePatterns: [
     /^I[A-Z]/,     // Interface prefix (IUser, IConfig) - common pattern
     /Props$/,      // React props often have similar structures
-    /State$/,      // State types
     /Options$/,    // Options types are expected to be similar
     /Config$/,     // Config types
-    /Request$/,    // Request/Response pairs
-    /Response$/,
-    /Data$/,       // Data transfer objects
   ],
+  ignoreTypes: [],
   checkFieldStructure: true,
   fieldSimilarityThreshold: 0.8,
 };
@@ -88,18 +97,27 @@ const DEFAULT_OPTIONS: SimilarTypesOptions = {
 /**
  * Get options from linter config.
  */
-function getOptions(config: LinterConfig): SimilarTypesOptions {
+function getOptions(config: LinterConfig): Required<SimilarTypesOptions> {
   const opts = config.options as Partial<SimilarTypesOptions> | undefined;
   return {
     ...DEFAULT_OPTIONS,
     ...opts,
-  };
+    ignorePatterns: [
+      ...(DEFAULT_OPTIONS.ignorePatterns ?? []),
+      ...(opts?.ignorePatterns ?? []),
+    ],
+    ignoreTypes: [
+      ...(DEFAULT_OPTIONS.ignoreTypes ?? []),
+      ...(opts?.ignoreTypes ?? []),
+    ],
+  } as Required<SimilarTypesOptions>;
 }
 
 /**
- * Check if a type should be ignored based on name patterns.
+ * Check if a type should be ignored based on name patterns or explicit list.
  */
-function shouldIgnore(name: string, patterns: RegExp[]): boolean {
+function shouldIgnore(name: string, patterns: RegExp[], explicitNames: string[]): boolean {
+  if (explicitNames.includes(name)) return true;
   return patterns.some((pattern) => pattern.test(name));
 }
 
@@ -238,8 +256,11 @@ export class SimilarTypesLinter extends BaseLinter {
       // Must meet minimum name length
       if (type.name.length < (options.minNameLength ?? 3)) return false;
 
-      // Must not match ignore patterns
-      if (shouldIgnore(type.name, options.ignorePatterns ?? [])) return false;
+      // Must not match ignore patterns or explicit ignore list
+      if (shouldIgnore(type.name, options.ignorePatterns ?? [], options.ignoreTypes ?? [])) return false;
+
+      // Must meet minimum field count
+      if (type.fields.length < (options.minFieldCount ?? 2)) return false;
 
       return true;
     });
