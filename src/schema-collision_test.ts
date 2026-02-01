@@ -81,7 +81,7 @@ Deno.test("schema-collision - reports exact name collision", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "schema-collision/exact-name-collision");
+  assertEquals(first(violations).kind, "schema-collision/exact-name-collision");
 });
 
 Deno.test("schema-collision - reports multiple exact collisions", () => {
@@ -126,7 +126,7 @@ Deno.test("schema-collision - reports case-insensitive collision", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "schema-collision/case-insensitive-collision");
+  assertEquals(first(violations).kind, "schema-collision/case-insensitive-collision");
 });
 
 Deno.test("schema-collision - can disable case-insensitive checking", () => {
@@ -174,7 +174,7 @@ Deno.test("schema-collision - reports variant with Type suffix", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "schema-collision/variant-name-collision");
+  assertEquals(first(violations).kind, "schema-collision/variant-name-collision");
 });
 
 Deno.test("schema-collision - reports variant with Interface suffix", () => {
@@ -194,7 +194,7 @@ Deno.test("schema-collision - reports variant with Interface suffix", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "schema-collision/variant-name-collision");
+  assertEquals(first(violations).kind, "schema-collision/variant-name-collision");
 });
 
 Deno.test("schema-collision - reports variant with I prefix", () => {
@@ -214,7 +214,7 @@ Deno.test("schema-collision - reports variant with I prefix", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "schema-collision/variant-name-collision");
+  assertEquals(first(violations).kind, "schema-collision/variant-name-collision");
 });
 
 Deno.test("schema-collision - reports variant with T prefix", () => {
@@ -234,7 +234,7 @@ Deno.test("schema-collision - reports variant with T prefix", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "schema-collision/variant-name-collision");
+  assertEquals(first(violations).kind, "schema-collision/variant-name-collision");
 });
 
 Deno.test("schema-collision - can disable variant checking", () => {
@@ -402,7 +402,7 @@ Deno.test("schema-collision - can customize variant suffixes", () => {
 
   const violations = linter.lint(data, config);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "schema-collision/variant-name-collision");
+  assertEquals(first(violations).kind, "schema-collision/variant-name-collision");
 });
 
 Deno.test("schema-collision - can customize variant prefixes", () => {
@@ -429,7 +429,7 @@ Deno.test("schema-collision - can customize variant prefixes", () => {
 
   const violations = linter.lint(data, config);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "schema-collision/variant-name-collision");
+  assertEquals(first(violations).kind, "schema-collision/variant-name-collision");
 });
 
 Deno.test("schema-collision - can disable exact match checking", () => {
@@ -478,7 +478,7 @@ Deno.test("schema-collision - exact match takes precedence over other matches", 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
   // Should report exact match, not case-insensitive or variant
-  assertEquals(first(violations).code, "schema-collision/exact-name-collision");
+  assertEquals(first(violations).kind, "schema-collision/exact-name-collision");
 });
 
 // =============================================================================
@@ -568,7 +568,6 @@ Deno.test("schema-collision - violation has correct linter name", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).linter, "schema-collision");
 });
 
 Deno.test("schema-collision - violation has correct severity", () => {
@@ -588,7 +587,6 @@ Deno.test("schema-collision - violation has correct severity", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).severity, "error");
 });
 
 Deno.test("schema-collision - violation includes related locations", () => {

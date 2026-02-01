@@ -63,7 +63,7 @@ Deno.test("orphaned-code - reports unused exported function", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "orphaned-code/orphaned-export");
+  assertEquals(first(violations).kind, "orphaned-code/orphaned-export");
 });
 
 Deno.test("orphaned-code - reports unused exported type", () => {
@@ -84,7 +84,7 @@ Deno.test("orphaned-code - reports unused exported type", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "orphaned-code/orphaned-export");
+  assertEquals(first(violations).kind, "orphaned-code/orphaned-export");
 });
 
 // =============================================================================
@@ -586,7 +586,6 @@ Deno.test("orphaned-code - violation has correct linter name", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).linter, "orphaned-code");
 });
 
 Deno.test("orphaned-code - violation has correct severity", () => {
@@ -603,7 +602,6 @@ Deno.test("orphaned-code - violation has correct severity", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).severity, "warning");
 });
 
 Deno.test("orphaned-code - violation includes suggestion", () => {

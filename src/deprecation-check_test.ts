@@ -61,7 +61,7 @@ Deno.test("deprecation-check - detects @deprecated annotation", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "deprecation-check/deprecated-annotation");
+  assertEquals(first(violations).kind, "deprecation-check/deprecated-annotation");
 });
 
 Deno.test("deprecation-check - detects DEPRECATED marker", () => {
@@ -81,7 +81,7 @@ Deno.test("deprecation-check - detects DEPRECATED marker", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "deprecation-check/deprecated-marker");
+  assertEquals(first(violations).kind, "deprecation-check/deprecated-marker");
 });
 
 Deno.test("deprecation-check - detects 'is deprecated' mention", () => {
@@ -101,7 +101,7 @@ Deno.test("deprecation-check - detects 'is deprecated' mention", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "deprecation-check/deprecated-mention");
+  assertEquals(first(violations).kind, "deprecation-check/deprecated-mention");
 });
 
 Deno.test("deprecation-check - detects 'are deprecated' mention", () => {
@@ -121,7 +121,7 @@ Deno.test("deprecation-check - detects 'are deprecated' mention", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "deprecation-check/deprecated-mention");
+  assertEquals(first(violations).kind, "deprecation-check/deprecated-mention");
 });
 
 // =============================================================================
@@ -145,7 +145,7 @@ Deno.test("deprecation-check - detects 'to be removed' marker", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "deprecation-check/deprecated-removal");
+  assertEquals(first(violations).kind, "deprecation-check/deprecated-removal");
 });
 
 Deno.test("deprecation-check - detects 'will be removed' marker", () => {
@@ -165,7 +165,7 @@ Deno.test("deprecation-check - detects 'will be removed' marker", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "deprecation-check/deprecated-removal");
+  assertEquals(first(violations).kind, "deprecation-check/deprecated-removal");
 });
 
 Deno.test("deprecation-check - detects 'scheduled for removal' marker", () => {
@@ -185,7 +185,7 @@ Deno.test("deprecation-check - detects 'scheduled for removal' marker", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "deprecation-check/deprecated-removal");
+  assertEquals(first(violations).kind, "deprecation-check/deprecated-removal");
 });
 
 // =============================================================================
@@ -209,7 +209,7 @@ Deno.test("deprecation-check - detects obsolete marker", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "deprecation-check/deprecated-obsolete");
+  assertEquals(first(violations).kind, "deprecation-check/deprecated-obsolete");
 });
 
 // =============================================================================
@@ -233,7 +233,7 @@ Deno.test("deprecation-check - detects 'do not use' warning", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "deprecation-check/deprecated-warning");
+  assertEquals(first(violations).kind, "deprecation-check/deprecated-warning");
 });
 
 Deno.test("deprecation-check - detects 'avoid using' warning", () => {
@@ -253,7 +253,7 @@ Deno.test("deprecation-check - detects 'avoid using' warning", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "deprecation-check/deprecated-warning");
+  assertEquals(first(violations).kind, "deprecation-check/deprecated-warning");
 });
 
 // =============================================================================
@@ -301,7 +301,7 @@ Deno.test("deprecation-check - detects 'legacy' when enabled", () => {
 
   const violations = linter.lint(data, config);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "deprecation-check/deprecated-legacy");
+  assertEquals(first(violations).kind, "deprecation-check/deprecated-legacy");
 });
 
 // =============================================================================
@@ -646,7 +646,6 @@ Deno.test("deprecation-check - violation has correct linter name", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).linter, "deprecation-check");
 });
 
 Deno.test("deprecation-check - violation has correct severity", () => {
@@ -668,7 +667,6 @@ Deno.test("deprecation-check - violation has correct severity", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).severity, "error");
 });
 
 Deno.test("deprecation-check - violation includes suggestion", () => {

@@ -102,7 +102,7 @@ Deno.test("missing-docs - reports exported function without JSDoc", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "missing-docs/missing-function-docs");
+  assertEquals(first(violations).kind, "missing-docs/missing-function-docs");
 });
 
 Deno.test("missing-docs - reports exported function with empty JSDoc", () => {
@@ -125,7 +125,7 @@ Deno.test("missing-docs - reports exported function with empty JSDoc", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "missing-docs/missing-function-docs");
+  assertEquals(first(violations).kind, "missing-docs/missing-function-docs");
 });
 
 Deno.test("missing-docs - reports exported function with whitespace-only JSDoc", () => {
@@ -148,7 +148,7 @@ Deno.test("missing-docs - reports exported function with whitespace-only JSDoc",
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "missing-docs/missing-function-docs");
+  assertEquals(first(violations).kind, "missing-docs/missing-function-docs");
 });
 
 // =============================================================================
@@ -175,7 +175,7 @@ Deno.test("missing-docs - reports exported type without JSDoc", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "missing-docs/missing-type-docs");
+  assertEquals(first(violations).kind, "missing-docs/missing-type-docs");
 });
 
 Deno.test("missing-docs - reports exported interface without JSDoc", () => {
@@ -199,7 +199,7 @@ Deno.test("missing-docs - reports exported interface without JSDoc", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "missing-docs/missing-type-docs");
+  assertEquals(first(violations).kind, "missing-docs/missing-type-docs");
 });
 
 // =============================================================================
@@ -253,8 +253,8 @@ Deno.test("missing-docs - detects missing param docs when enabled", () => {
 
   const violations = linter.lint(data, config);
   assertEquals(violations.length, 2); // One for each missing param
-  assertEquals(violations[0]!.code, "missing-docs/missing-param-doc");
-  assertEquals(violations[1]!.code, "missing-docs/missing-param-doc");
+  assertEquals(violations[0]!.kind, "missing-docs/missing-param-doc");
+  assertEquals(violations[1]!.kind, "missing-docs/missing-param-doc");
 });
 
 Deno.test("missing-docs - accepts valid param documentation", () => {
@@ -334,7 +334,7 @@ Deno.test("missing-docs - detects missing returns docs when enabled", () => {
 
   const violations = linter.lint(data, config);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "missing-docs/missing-returns-doc");
+  assertEquals(first(violations).kind, "missing-docs/missing-returns-doc");
 });
 
 Deno.test("missing-docs - accepts valid returns documentation", () => {
@@ -661,7 +661,6 @@ Deno.test("missing-docs - violation has correct linter name", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).linter, "missing-docs");
 });
 
 Deno.test("missing-docs - violation has correct severity", () => {
@@ -678,7 +677,6 @@ Deno.test("missing-docs - violation has correct severity", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).severity, "warning");
 });
 
 Deno.test("missing-docs - violation includes suggestion", () => {

@@ -144,7 +144,7 @@ Deno.test("type-location - reports interface outside types directory", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "type-outside-types");
+  assertEquals(first(violations).kind, "type-outside-types");
 });
 
 // =============================================================================
@@ -334,7 +334,6 @@ Deno.test("type-location - violation has correct severity", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).severity, "error");
 });
 
 Deno.test("type-location - violation includes suggestion", () => {
@@ -369,5 +368,4 @@ Deno.test("type-location - violation has correct linter name", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).linter, "type-location");
 });

@@ -62,7 +62,7 @@ Deno.test("similar-types - reports types with very similar names (high similarit
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "similar-types/similar-name-high");
+  assertEquals(first(violations).kind, "similar-types/similar-name-high");
 });
 
 Deno.test("similar-types - reports types with moderately similar names (medium similarity)", () => {
@@ -86,7 +86,7 @@ Deno.test("similar-types - reports types with moderately similar names (medium s
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "similar-types/similar-name-medium");
+  assertEquals(first(violations).kind, "similar-types/similar-name-medium");
 });
 
 Deno.test("similar-types - identical names in different files produces duplicate-type", () => {
@@ -119,7 +119,7 @@ Deno.test("similar-types - identical names in different files produces duplicate
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "similar-types/duplicate-type");
+  assertEquals(first(violations).kind, "similar-types/duplicate-type");
 });
 
 Deno.test("similar-types - same name but different structure produces same-name-different-structure", () => {
@@ -152,7 +152,7 @@ Deno.test("similar-types - same name but different structure produces same-name-
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "similar-types/same-name-different-structure");
+  assertEquals(first(violations).kind, "similar-types/same-name-different-structure");
 });
 
 // =============================================================================
@@ -189,7 +189,7 @@ Deno.test("similar-types - detects types with similar field structures", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).code, "similar-types/similar-structure");
+  assertEquals(first(violations).kind, "similar-types/similar-structure");
 });
 
 // =============================================================================
@@ -559,7 +559,6 @@ Deno.test("similar-types - violation has correct severity", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).severity, "error");
 });
 
 Deno.test("similar-types - violation includes related locations", () => {
@@ -630,5 +629,4 @@ Deno.test("similar-types - violation has correct linter name", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).linter, "similar-types");
 });

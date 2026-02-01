@@ -377,7 +377,7 @@ export function mockCodebase(opts: MockCodebaseOptions = {}): CodebaseData {
  */
 export const defaultConfig: LinterConfig = {
   enabled: true,
-  severity: undefined,
+  
   options: {},
 };
 
@@ -396,10 +396,10 @@ export function runLinter(
  * Assert that violations contain expected codes.
  */
 export function expectCodes(
-  violations: { code: string }[],
+  violations: { kind: string }[],
   expectedCodes: string[]
 ): void {
-  const actualCodes = violations.map((v) => v.code).sort();
+  const actualCodes = violations.map((v) => v.kind).sort();
   const expected = [...expectedCodes].sort();
 
   if (actualCodes.length !== expected.length) {
