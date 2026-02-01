@@ -41,7 +41,39 @@ export interface DuplicateStringsOptions {
   ignoreUrls?: boolean;
   /** Ignore strings that are likely CSS classes */
   ignoreCssClasses?: boolean;
+  /**
+   * Ignore strings used in typeof comparisons (e.g., "object", "function", "string").
+   * These are JavaScript primitive type names commonly used in type guards.
+   * @default true
+   */
+  ignoreTypeofStrings?: boolean;
+  /**
+   * Explicit list of strings to ignore. Use this as an escape hatch for
+   * project-specific strings that are intentionally repeated.
+   * 
+   * Unlike patterns, this requires you to explicitly list each string,
+   * forcing you to think about whether it truly should be exempt.
+   * 
+   * @default []
+   * @example ["my-app-name", "some-repeated-key"]
+   */
+  ignoreStrings?: string[];
 }
+
+/**
+ * Strings used in typeof comparisons - JavaScript primitive type names.
+ * These are genuinely ubiquitous in type guards and shouldn't be flagged.
+ */
+const TYPEOF_STRINGS = new Set([
+  "object",
+  "function",
+  "string",
+  "number",
+  "boolean",
+  "undefined",
+  "symbol",
+  "bigint",
+]);
 
 /**
  * Default options.
@@ -55,7 +87,6 @@ const DEFAULT_OPTIONS: DuplicateStringsOptions = {
     /^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)$/,
     /^(utf-8|utf8|ascii|base64|hex|binary)$/i,
     /^(left|right|top|bottom|center|start|end)$/i,
-    /^(error|warning|info|debug|success|failure)$/i,
     /^(id|name|type|value|key|data|text|label|title)$/i,
     /^(click|change|submit|focus|blur|input|load)$/i,
     /^\d+$/, // Pure numbers
@@ -66,6 +97,8 @@ const DEFAULT_OPTIONS: DuplicateStringsOptions = {
   ignorePaths: true,
   ignoreUrls: true,
   ignoreCssClasses: true,
+  ignoreTypeofStrings: true,
+  ignoreStrings: [],
 };
 
 // =============================================================================
@@ -114,6 +147,10 @@ function shouldIgnore(str: string, options: DuplicateStringsOptions): boolean {
   if (options.ignorePaths && looksLikePath(str)) return true;
   if (options.ignoreUrls && looksLikeUrl(str)) return true;
   if (options.ignoreCssClasses && looksLikeCssClasses(str)) return true;
+  // Ignore typeof comparison strings (object, function, string, etc.)
+  if ((options.ignoreTypeofStrings ?? true) && TYPEOF_STRINGS.has(str)) return true;
+  // Ignore explicitly listed strings
+  if (options.ignoreStrings?.includes(str)) return true;
   return false;
 }
 

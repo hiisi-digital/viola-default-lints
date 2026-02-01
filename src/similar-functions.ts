@@ -51,6 +51,18 @@ export interface SimilarFunctionsOptions {
   minNameLength?: number;
   /** Patterns for function names to ignore */
   ignorePatterns?: RegExp[];
+
+  /**
+   * Explicit list of function names to ignore. Use this as an escape hatch for
+   * functions that are intentionally similar by design.
+   * 
+   * Unlike patterns, this requires you to explicitly list each function,
+   * forcing you to think about whether the similarity is truly intentional.
+   * 
+   * @default []
+   * @example ["impactCond", "categoryCond", "fileCond"]
+   */
+  ignoreFunctions?: string[];
 }
 
 /**
@@ -69,8 +81,8 @@ const DEFAULT_OPTIONS: SimilarFunctionsOptions = {
     /^set[A-Z]/,    // Setters
     /^is[A-Z]/,     // Boolean checks
     /^has[A-Z]/,    // Boolean checks
-    /^to[A-Z]/,     // Converters
   ],
+  ignoreFunctions: [],
 };
 
 // =============================================================================
@@ -91,7 +103,8 @@ function getOptions(config: LinterConfig): SimilarFunctionsOptions {
 /**
  * Check if a function should be ignored based on name patterns.
  */
-function shouldIgnore(name: string, patterns: RegExp[]): boolean {
+function shouldIgnore(name: string, patterns: RegExp[], explicitNames: string[]): boolean {
+  if (explicitNames.includes(name)) return true;
   return patterns.some((pattern) => pattern.test(name));
 }
 
@@ -202,8 +215,8 @@ export class SimilarFunctionsLinter extends BaseLinter {
       // Must meet minimum name length
       if (func.name.length < (options.minNameLength ?? 3)) return false;
 
-      // Must not match ignore patterns
-      if (shouldIgnore(func.name, options.ignorePatterns ?? [])) return false;
+      // Must not match ignore patterns or explicit ignore list
+      if (shouldIgnore(func.name, options.ignorePatterns ?? [], options.ignoreFunctions ?? [])) return false;
 
       // Must meet minimum line count
       const lines = func.body.split("\n").length;

@@ -88,6 +88,20 @@ interface OrphanedCodeOptions {
    * @default false
    */
   checkDefaultExports?: boolean;
+
+  /**
+   * Explicit list of file paths (relative to project root) whose exports
+   * are intentionally part of the public API. Use this as an escape hatch
+   * when you have utility modules that are re-exported but the linter
+   * can't track the re-export chain.
+   * 
+   * Unlike patterns, this requires you to explicitly list each file,
+   * forcing you to think about whether it truly belongs in the public API.
+   * 
+   * @default []
+   * @example ["src/utils/hash.ts", "src/utils/similarity.ts"]
+   */
+  publicApiFiles?: string[];
 }
 
 const DEFAULT_OPTIONS: Required<OrphanedCodeOptions> = {
@@ -107,6 +121,7 @@ const DEFAULT_OPTIONS: Required<OrphanedCodeOptions> = {
   reexportCountsAsUsage: true,
   externalPatterns: [/^@std\//, /^npm:/, /^jsr:/, /^https?:\/\//, /^node:/],
   checkDefaultExports: false,
+  publicApiFiles: [],
 };
 
 // =============================================================================
@@ -234,6 +249,10 @@ export class OrphanedCodeLinter extends BaseLinter {
       externalPatterns: [
         ...DEFAULT_OPTIONS.externalPatterns,
         ...(userOpts.externalPatterns ?? []),
+      ],
+      publicApiFiles: [
+        ...DEFAULT_OPTIONS.publicApiFiles,
+        ...(userOpts.publicApiFiles ?? []),
       ],
     };
   }
@@ -403,6 +422,17 @@ export class OrphanedCodeLinter extends BaseLinter {
   ): boolean {
     // Don't report exports from entry points
     if (opts.entryPointPatterns.some((p) => p.test(resolved.modulePath))) {
+      return false;
+    }
+
+    // Don't report exports from explicitly listed public API files
+    // Note: we check both normalized path and with .ts extension
+    const normalizedPath = resolved.modulePath;
+    const pathWithExt = normalizedPath + ".ts";
+    if (opts.publicApiFiles.some((f) => {
+      const normalizedFile = f.replace(/\.tsx?$/, "");
+      return normalizedFile === normalizedPath || f === pathWithExt;
+    })) {
       return false;
     }
 
