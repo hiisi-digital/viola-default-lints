@@ -57,7 +57,7 @@ Deno.test("duplicate-strings - reports strings that appear multiple times", () =
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  expectCodes(violations, ["duplicate-string-many"]);
+  expectCodes(violations, ["duplicate-strings/duplicate"]);
 });
 
 Deno.test("duplicate-strings - reports duplicates across files", () => {
@@ -87,7 +87,7 @@ Deno.test("duplicate-strings - reports duplicates across files", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  expectCodes(violations, ["duplicate-string-many"]);
+  expectCodes(violations, ["duplicate-strings/duplicate"]);
 });
 
 // =============================================================================
@@ -194,7 +194,7 @@ Deno.test("duplicate-strings - does NOT ignore test files by default", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  expectCodes(violations, ["duplicate-string-many"]);
+  expectCodes(violations, ["duplicate-strings/duplicate"]);
 });
 
 Deno.test("duplicate-strings - does NOT ignore spec files by default", () => {
@@ -214,7 +214,7 @@ Deno.test("duplicate-strings - does NOT ignore spec files by default", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  expectCodes(violations, ["duplicate-string-many"]);
+  expectCodes(violations, ["duplicate-strings/duplicate"]);
 });
 
 // =============================================================================
@@ -240,7 +240,7 @@ Deno.test("duplicate-strings - reports multiple distinct duplicate groups", () =
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 2);
-  expectCodes(violations, ["duplicate-string-many", "duplicate-string-many"]);
+  expectCodes(violations, ["duplicate-strings/duplicate", "duplicate-strings/duplicate"]);
 });
 
 // =============================================================================
