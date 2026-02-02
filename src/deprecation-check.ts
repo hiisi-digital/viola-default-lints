@@ -36,10 +36,11 @@ import {
  */
 const DEPRECATION_PATTERNS = [
   { pattern: /@deprecated/i, type: "annotation" },
-  { pattern: /\bDEPRECATED\b/, type: "marker" },
+  // Specific patterns must come before general ones (first match wins due to break)
   { pattern: /\bis\s+deprecated\b/i, type: "mention" },
   { pattern: /\bare\s+deprecated\b/i, type: "mention" },
   { pattern: /\bmarked\s+(?:as\s+)?deprecated\b/i, type: "mention" },
+  { pattern: /\bDEPRECATED\b/i, type: "marker" }, // Now case-insensitive, but after specific patterns
   { pattern: /\blegacy\b/i, type: "legacy" },
   { pattern: /\bto.?be.?removed\b/i, type: "removal" },
   { pattern: /\bwill.?be.?removed\b/i, type: "removal" },
