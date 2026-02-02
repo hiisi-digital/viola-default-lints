@@ -250,6 +250,12 @@ export class SimilarTypesLinter extends BaseLinter {
     const issues: Issue[] = [];
     const options = getOptions(config);
 
+    // Debug: Log initial state
+    if (Deno.env.get("DEBUG_LINTERS")) {
+      console.log(`[similar-types] Total types in codebase: ${data.allTypes.length}`);
+      console.log(`[similar-types] Options:`, JSON.stringify(options, null, 2));
+    }
+
     // Filter types to check
     const types = data.allTypes.filter((type) => {
       // Must have a name
@@ -266,6 +272,12 @@ export class SimilarTypesLinter extends BaseLinter {
 
       return true;
     });
+
+    // Debug: Log filtered types
+    if (Deno.env.get("DEBUG_LINTERS")) {
+      console.log(`[similar-types] Types after filtering: ${types.length}`);
+      types.forEach(t => console.log(`  - ${t.name} (${t.fields.length} fields) in ${t.location.file}`));
+    }
 
     // Compare all pairs for name similarity
     const checked = new Set<string>();
@@ -287,10 +299,16 @@ export class SimilarTypesLinter extends BaseLinter {
         // Skip if in the same file (likely intentional related types)
         // Unless they have the exact same name
         if (typeA.location.file === typeB.location.file && typeA.name !== typeB.name) {
+          if (Deno.env.get("DEBUG_LINTERS")) {
+            console.log(`[similar-types] Skipping same-file pair: ${typeA.name} vs ${typeB.name}`);
+          }
           continue;
         }
 
         const issue = this.checkPair(typeA, typeB, options);
+        if (Deno.env.get("DEBUG_LINTERS")) {
+          console.log(`[similar-types] Checked pair: ${typeA.name} vs ${typeB.name}, issue: ${issue ? issue.kind : 'none'}`);
+        }
         if (issue) {
           issues.push(issue);
         }
@@ -301,6 +319,10 @@ export class SimilarTypesLinter extends BaseLinter {
     if (options.checkFieldStructure) {
       const structuralIssues = this.checkFieldStructures(types, options);
       issues.push(...structuralIssues);
+    }
+
+    if (Deno.env.get("DEBUG_LINTERS")) {
+      console.log(`[similar-types] Total issues found: ${issues.length}`);
     }
 
     return issues;
@@ -315,6 +337,10 @@ export class SimilarTypesLinter extends BaseLinter {
     options: SimilarTypesOptions
   ): Issue | null {
     const { similarity, level: _level, metrics } = compareIdentifiers(typeA.name, typeB.name);
+
+    if (Deno.env.get("DEBUG_LINTERS")) {
+      console.log(`[similar-types] compareIdentifiers("${typeA.name}", "${typeB.name}") = ${similarity.toFixed(3)}, threshold: ${options.minSimilarity ?? 0.7}`);
+    }
 
     // Exact same name in different files
     if (typeA.name === typeB.name) {
