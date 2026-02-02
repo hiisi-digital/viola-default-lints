@@ -68,7 +68,7 @@ Deno.test("similar-functions - reports functions with similar names (medium thre
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).kind, "similar-function-name-medium");
+  assertEquals(first(violations).kind, "similar-functions/similar-name-medium");
 });
 
 Deno.test("similar-functions - reports similar functions across files", () => {
@@ -91,7 +91,7 @@ Deno.test("similar-functions - reports similar functions across files", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).kind, "similar-function-name-medium");
+  assertEquals(first(violations).kind, "similar-functions/similar-name-medium");
 });
 
 Deno.test("similar-functions - identical names in different files produces high similarity", () => {
@@ -114,7 +114,7 @@ Deno.test("similar-functions - identical names in different files produces high 
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).kind, "duplicate-function");
+  assertEquals(first(violations).kind, "similar-functions/duplicate-function");
 });
 
 // =============================================================================

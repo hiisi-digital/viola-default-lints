@@ -88,7 +88,7 @@ Deno.test("type-location - reports non-exported types outside types dir too", ()
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  expectCodes(violations, ["type-outside-types"]);
+  expectCodes(violations, ["type-location/type-outside-types"]);
 });
 
 // =============================================================================
@@ -109,7 +109,7 @@ Deno.test("type-location - reports types outside types directories", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  expectCodes(violations, ["type-outside-types"]);
+  expectCodes(violations, ["type-location/type-outside-types"]);
 });
 
 Deno.test("type-location - reports multiple types in wrong location", () => {
@@ -127,7 +127,7 @@ Deno.test("type-location - reports multiple types in wrong location", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 2);
-  expectCodes(violations, ["type-outside-types", "type-outside-types"]);
+  expectCodes(violations, ["type-location/type-outside-types", "type-location/type-outside-types"]);
 });
 
 Deno.test("type-location - reports interface outside types directory", () => {
@@ -144,7 +144,7 @@ Deno.test("type-location - reports interface outside types directory", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).kind, "type-outside-types");
+  assertEquals(first(violations).kind, "type-location/type-outside-types");
 });
 
 // =============================================================================
@@ -168,7 +168,7 @@ Deno.test("type-location - reports functions in types/ directory", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  expectCodes(violations, ["logic-in-types"]);
+  expectCodes(violations, ["type-location/logic-in-types"]);
 });
 
 Deno.test("type-location - no violation for functions in *.guards.ts file", () => {
