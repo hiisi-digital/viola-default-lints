@@ -515,8 +515,10 @@ export class OrphanedCodeLinter extends BaseLinter {
     }
 
     // Resolve relative path
-    const importerDir = importerPath.replace(/\/[^/]+$/, "");
-    const segments = importerDir.split("/");
+    // Get directory of importer (everything before the last /)
+    const lastSlash = importerPath.lastIndexOf("/");
+    const importerDir = lastSlash >= 0 ? importerPath.substring(0, lastSlash) : "";
+    const segments = importerDir ? importerDir.split("/") : [];
     const importSegments = importFrom.split("/");
 
     for (const seg of importSegments) {
