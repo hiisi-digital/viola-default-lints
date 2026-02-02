@@ -184,6 +184,11 @@ export class SchemaCollisionLinter extends BaseLinter {
       }
 
       for (const type of file.types) {
+        // Skip non-exported types
+        if (!type.isExported) {
+          continue;
+        }
+
         // Skip ignored types
         if (this.shouldIgnoreType(type.name, opts)) {
           continue;
