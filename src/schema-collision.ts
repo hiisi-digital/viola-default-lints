@@ -268,12 +268,14 @@ export class SchemaCollisionLinter extends BaseLinter {
 
   /**
    * Generate variant names for a schema name.
+   * Note: Does NOT include the base name itself - that's handled separately
+   * via exact and case-insensitive checks.
    */
   private generateVariants(
     name: string,
     opts: Required<SchemaCollisionOptions>
   ): string[] {
-    const variants: string[] = [name];
+    const variants: string[] = [];
 
     // Add suffix variants: User -> UserType, UserInterface, etc.
     for (const suffix of opts.variantSuffixes) {
