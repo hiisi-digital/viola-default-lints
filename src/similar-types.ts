@@ -80,10 +80,12 @@ const DEFAULT_OPTIONS: SimilarTypesOptions = {
   minFieldCount: 2,
   minNameLength: 3,
   ignorePatterns: [
-    /^I[A-Z]/,     // Interface prefix (IUser, IConfig) - common pattern
-    /Props$/,      // React props often have similar structures
-    /Options$/,    // Options types are expected to be similar
-    /Config$/,     // Config types
+    // Keep patterns empty by default - users can configure as needed
+    // Common patterns that might be added:
+    // /^I[A-Z]/,     // Interface prefix (IUser, IConfig)
+    // /Props$/,      // React props
+    // /Options$/,    // Options types
+    // /Config$/,     // Config types
   ],
   ignoreTypes: [],
   checkFieldStructure: true,
