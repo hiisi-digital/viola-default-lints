@@ -36,7 +36,7 @@ import {
  */
 const DEPRECATION_PATTERNS = [
   { pattern: /@deprecated/i, type: "annotation" },
-  { pattern: /\bDEPRECATED\b/, type: "marker" },
+  { pattern: /\bDEPRECATED\b/i, type: "marker" }, // Made case-insensitive to match "deprecated", "Deprecated", etc.
   { pattern: /\bis\s+deprecated\b/i, type: "mention" },
   { pattern: /\bare\s+deprecated\b/i, type: "mention" },
   { pattern: /\bmarked\s+(?:as\s+)?deprecated\b/i, type: "mention" },
