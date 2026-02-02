@@ -109,12 +109,18 @@ const DEFAULT_OPTIONS: Required<OrphanedCodeOptions> = {
   checkTypes: true,
   checkOther: true,
   entryPointPatterns: [
-    /mod\.ts$/,
-    /index\.ts$/,
-    /main\.ts$/,
-    /cli\.ts$/,
-    /server\.ts$/,
-    /app\.ts$/,
+    /^mod$/,
+    /\/mod$/,
+    /^index$/,
+    /\/index$/,
+    /^main$/,
+    /\/main$/,
+    /^cli$/,
+    /\/cli$/,
+    /^server$/,
+    /\/server$/,
+    /^app$/,
+    /\/app$/,
   ],
   ignoreExportPatterns: [],
   ignoreFilePatterns: [/\.test\.ts$/, /\.spec\.ts$/, /_test\.ts$/, /tests?\//],
@@ -482,7 +488,6 @@ export class OrphanedCodeLinter extends BaseLinter {
     return path
       .replace(/\\/g, "/")
       .replace(/^\.\//, "")
-      .replace(/\/index\.ts$/, "")
       .replace(/\.tsx?$/, "");
   }
 
@@ -509,8 +514,10 @@ export class OrphanedCodeLinter extends BaseLinter {
     }
 
     // Resolve relative path
-    const importerDir = importerPath.replace(/\/[^/]+$/, "");
-    const segments = importerDir.split("/");
+    // Get directory of importer (everything before the last /)
+    const lastSlash = importerPath.lastIndexOf("/");
+    const importerDir = lastSlash >= 0 ? importerPath.substring(0, lastSlash) : "";
+    const segments = importerDir ? importerDir.split("/") : [];
     const importSegments = importFrom.split("/");
 
     for (const seg of importSegments) {
