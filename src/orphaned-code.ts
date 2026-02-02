@@ -488,7 +488,6 @@ export class OrphanedCodeLinter extends BaseLinter {
     return path
       .replace(/\\/g, "/")
       .replace(/^\.\//, "")
-      .replace(/\/index\.ts$/, "")
       .replace(/\.tsx?$/, "");
   }
 
