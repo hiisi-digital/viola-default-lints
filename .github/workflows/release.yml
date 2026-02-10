@@ -100,7 +100,7 @@ jobs:
         run: deno check mod.ts
 
       - name: Run tests
-        run: deno test src/
+        run: deno test --allow-env src/
 
       - name: Validate publish config
         run: |
