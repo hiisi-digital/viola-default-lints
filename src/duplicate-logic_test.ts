@@ -105,9 +105,9 @@ Deno.test("duplicate-logic - reports similar implementations", () => {
   }`;
 
   const bodyB = `{
-    const user = database.users.findOne(userId);
-    if (!user) throw new Error('User not found');
-    const validated = validate(user);
+    const admin = database.admins.findOne(adminId);
+    if (!admin) throw new Error('Admin not found');
+    const validated = validate(admin);
     return transform(validated);
   }`;
 
@@ -116,9 +116,9 @@ Deno.test("duplicate-logic - reports similar implementations", () => {
       mockFile({
         path: "src/user.ts",
         functions: [
-          mockFunction({ 
-            name: "fetchUser", 
-            file: "src/user.ts", 
+          mockFunction({
+            name: "fetchUser",
+            file: "src/user.ts",
             line: 1,
             body: bodyA,
           }),
@@ -127,9 +127,9 @@ Deno.test("duplicate-logic - reports similar implementations", () => {
       mockFile({
         path: "src/admin.ts",
         functions: [
-          mockFunction({ 
-            name: "fetchAdmin", 
-            file: "src/admin.ts", 
+          mockFunction({
+            name: "fetchAdmin",
+            file: "src/admin.ts",
             line: 1,
             body: bodyB,
           }),
@@ -139,8 +139,6 @@ Deno.test("duplicate-logic - reports similar implementations", () => {
   });
 
   const violations = linter.lint(data, defaultConfig);
-  assertEquals(violations.length, 1);
-  // Could be either exact-duplicate or similar-implementation
   assertEquals(violations.length >= 1, true);
 });
 
@@ -579,8 +577,7 @@ Deno.test("duplicate-logic - errorOnExact option controls severity", () => {
   });
 
   const violations = linter.lint(data, exactConfig);
-  if (violations.length > 0) {
-  }
+  assertEquals(violations.length, 1);
 });
 
 // =============================================================================
@@ -679,9 +676,9 @@ Deno.test("duplicate-logic - violation has correct linter name", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "funcA", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "funcA",
+            file: "src/app.ts",
             line: 1,
             body: duplicateBody,
           }),
@@ -690,9 +687,9 @@ Deno.test("duplicate-logic - violation has correct linter name", () => {
       mockFile({
         path: "src/utils.ts",
         functions: [
-          mockFunction({ 
-            name: "funcB", 
-            file: "src/utils.ts", 
+          mockFunction({
+            name: "funcB",
+            file: "src/utils.ts",
             line: 1,
             body: duplicateBody,
           }),
@@ -702,8 +699,8 @@ Deno.test("duplicate-logic - violation has correct linter name", () => {
   });
 
   const violations = linter.lint(data, defaultConfig);
-  if (violations.length > 0) {
-  }
+  assertEquals(violations.length, 1);
+  assertEquals(first(violations).kind, "duplicate-logic/exact-duplicate");
 });
 
 Deno.test("duplicate-logic - violation includes related locations", () => {
@@ -740,10 +737,9 @@ Deno.test("duplicate-logic - violation includes related locations", () => {
   });
 
   const violations = linter.lint(data, defaultConfig);
-  if (violations.length > 0) {
-    assertEquals(Array.isArray(first(violations).relatedLocations), true);
-    assertEquals(first(violations).relatedLocations!.length >= 1, true);
-  }
+  assertEquals(violations.length, 1);
+  assertEquals(Array.isArray(first(violations).relatedLocations), true);
+  assertEquals(first(violations).relatedLocations!.length >= 1, true);
 });
 
 Deno.test("duplicate-logic - violation includes suggestion", () => {
@@ -780,8 +776,7 @@ Deno.test("duplicate-logic - violation includes suggestion", () => {
   });
 
   const violations = linter.lint(data, defaultConfig);
-  if (violations.length > 0) {
-    assertEquals(typeof first(violations).suggestion, "string");
-    assertEquals(first(violations).suggestion!.length > 0, true);
-  }
+  assertEquals(violations.length, 1);
+  assertEquals(typeof first(violations).suggestion, "string");
+  assertEquals(first(violations).suggestion!.length > 0, true);
 });
