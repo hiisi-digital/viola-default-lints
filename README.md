@@ -4,9 +4,9 @@
 
 [![JSR](https://jsr.io/badges/@hiisi/viola-default-lints)](https://jsr.io/@hiisi/viola-default-lints)
 [![GitHub Issues](https://img.shields.io/github/issues/hiisi-digital/viola-default-lints.svg)](https://github.com/hiisi-digital/viola-default-lints/issues)
-![License](https://img.shields.io/github/license/viola-default-lints?color=%23009689)
+![License](https://img.shields.io/github/license/hiisi-digital/viola-default-lints?color=%23009689)
 
-> A collection of convention linters for viola with sensible default rules.
+> Default linters and rules for the viola convention linter.
 
 </div>
 
@@ -16,7 +16,7 @@ This package provides a set of opinionated convention linters that work with the
 [viola](https://jsr.io/@hiisi/viola) runtime. These linters check for common issues like
 code duplication, naming conventions, documentation gaps, and file organization problems.
 
-The plugin includes **sensible default rules** that classify issues by impact:
+The plugin includes default rules that classify issues by impact:
 - Critical/Major impact → error
 - Minor impact → warn
 - Trivial impact → info
@@ -70,7 +70,7 @@ import defaultLints from "@hiisi/viola-default-lints";
 
 export default viola()
   .use(defaultLints)
-  .set("similar-functions.threshold", 0.8)
+  .set("similar-functions.minSimilarity", 0.8)
   .set("duplicate-strings.minLength", 10)
   .rule(report.off, when.in("**/*_test.ts"));
 ```
@@ -93,13 +93,13 @@ export default viola()
 |--------|-------------|
 | `type-location` | Types must be in `types/` directories |
 | `similar-functions` | Detect similar function names |
-| `similar-types` | Detect similar type names |
+| `similar-types` | Detect similar type names and identical field structures |
 | `duplicate-strings` | Find repeated string literals |
-| `duplicate-logic` | Find duplicated code patterns |
-| `deprecation-check` | Find deprecated code past its removal date |
+| `duplicate-logic` | Find functions with similar implementations |
+| `deprecation-check` | Find `@deprecated` annotations and removal markers |
 | `missing-docs` | Find exports without documentation |
-| `orphaned-code` | Find unused internal code |
-| `schema-collision` | Find conflicting schema definitions |
+| `orphaned-code` | Find exports that are never imported |
+| `schema-collision` | Find naming conflicts between schemas and types |
 
 ## Default Rules
 
