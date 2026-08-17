@@ -91,7 +91,7 @@ export default viola()
 
 | Linter | Description |
 |--------|-------------|
-| `type-location` | Types must be in `types/` directories |
+| `type-location` | Types must be in `types/` directories, and logic must stay out of types-only packages |
 | `similar-functions` | Detect similar function names |
 | `similar-types` | Detect similar type names and identical field structures |
 | `duplicate-strings` | Find repeated string literals |
@@ -100,6 +100,8 @@ export default viola()
 | `missing-docs` | Find exports without documentation |
 | `orphaned-code` | Find exports that are never imported |
 | `schema-collision` | Find naming conflicts between schemas and types |
+
+`missing-docs` reads the `jsDoc` field on extracted functions and types. Viola's extraction pass does not populate that field, so against real crawled data every exported function and type is reported as undocumented. Keep the rule off, or scope it, until extraction fills `jsDoc`.
 
 ## Default Rules
 
