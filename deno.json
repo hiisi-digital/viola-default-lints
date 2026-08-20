@@ -1,6 +1,7 @@
 {
   "name": "@hiisi/viola-default-lints",
   "version": "0.3.0",
+  "description": "Default linters and rules for the viola convention linter.",
   "exports": {
     ".": "./mod.ts"
   },
