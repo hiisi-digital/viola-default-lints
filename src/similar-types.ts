@@ -10,17 +10,17 @@
  */
 
 import {
-    BaseLinter,
-    type CodebaseData,
-    compareIdentifiers,
-    type Issue,
-    type IssueCatalog,
-    jaccardSimilarity,
-    type LinterConfig,
-    type LinterDataRequirements,
-    type LinterMeta,
-    type SimilarityThresholds,
-    type TypeInfo,
+  BaseLinter,
+  type CodebaseData,
+  compareIdentifiers,
+  type Issue,
+  type IssueCatalog,
+  jaccardSimilarity,
+  type LinterConfig,
+  type LinterDataRequirements,
+  type LinterMeta,
+  type SimilarityThresholds,
+  type TypeInfo,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -31,9 +31,9 @@ import {
  * Thresholds for type name similarity.
  */
 const _TYPE_NAME_THRESHOLDS: SimilarityThresholds = {
-  low: 0.5,    // Below this: no match
+  low: 0.5, // Below this: no match
   medium: 0.7, // Above this: warning
-  high: 0.85,  // Above this: error
+  high: 0.85, // Above this: error
 };
 
 /**
@@ -56,10 +56,10 @@ export interface SimilarTypesOptions {
   /**
    * Explicit list of type names to ignore. Use this as an escape hatch for
    * types that are intentionally similar by design.
-   * 
+   *
    * Unlike patterns, this requires you to explicitly list each type,
    * forcing you to think about whether the similarity is truly intentional.
-   * 
+   *
    * @default []
    * @example ["FileCondition", "LinterCondition"]
    */
@@ -118,7 +118,11 @@ function getOptions(config: LinterConfig): Required<SimilarTypesOptions> {
 /**
  * Check if a type should be ignored based on name patterns or explicit list.
  */
-function shouldIgnore(name: string, patterns: RegExp[], explicitNames: string[]): boolean {
+function shouldIgnore(
+  name: string,
+  patterns: RegExp[],
+  explicitNames: string[],
+): boolean {
   if (explicitNames.includes(name)) return true;
   return patterns.some((pattern) => pattern.test(name));
 }
@@ -129,7 +133,7 @@ function shouldIgnore(name: string, patterns: RegExp[], explicitNames: string[])
  */
 function compareFields(
   fieldsA: readonly { name: string; type: string }[],
-  fieldsB: readonly { name: string; type: string }[]
+  fieldsB: readonly { name: string; type: string }[],
 ): { nameSimilarity: number; typeSimilarity: number; combined: number } {
   if (fieldsA.length === 0 && fieldsB.length === 0) {
     return { nameSimilarity: 1, typeSimilarity: 1, combined: 1 };
@@ -176,7 +180,9 @@ function formatType(type: TypeInfo): string {
     return `${ro}${f.name}${opt}: ${f.type}`;
   });
 
-  const more = type.fields.length > 5 ? `\n  ... ${type.fields.length - 5} more fields` : "";
+  const more = type.fields.length > 5
+    ? `\n  ... ${type.fields.length - 5} more fields`
+    : "";
 
   return `${keyword} ${type.name} {\n  ${fields.join(";\n  ")}${more}\n}`;
 }
@@ -218,27 +224,32 @@ export class SimilarTypesLinter extends BaseLinter {
     "similar-types/similar-name-high": {
       category: "maintainability",
       impact: "major",
-      description: "Type names are very similar, likely indicating duplicates that should be consolidated",
+      description:
+        "Type names are very similar, likely indicating duplicates that should be consolidated",
     },
     "similar-types/similar-name-medium": {
       category: "maintainability",
       impact: "minor",
-      description: "Type names are moderately similar, review to ensure they serve distinct purposes",
+      description:
+        "Type names are moderately similar, review to ensure they serve distinct purposes",
     },
     "similar-types/duplicate-type": {
       category: "maintainability",
       impact: "critical",
-      description: "Type exists in multiple files with nearly identical structure",
+      description:
+        "Type exists in multiple files with nearly identical structure",
     },
     "similar-types/same-name-different-structure": {
       category: "consistency",
       impact: "major",
-      description: "Type exists in multiple files with different structures, which is confusing and error-prone",
+      description:
+        "Type exists in multiple files with different structures, which is confusing and error-prone",
     },
     "similar-types/similar-structure": {
       category: "maintainability",
       impact: "minor",
-      description: "Types have very similar field structures but different names, consider consolidating",
+      description:
+        "Types have very similar field structures but different names, consider consolidating",
     },
   };
 
@@ -252,7 +263,9 @@ export class SimilarTypesLinter extends BaseLinter {
 
     // Debug: Log initial state
     if (Deno.env.get("DEBUG_LINTERS")) {
-      console.log(`[similar-types] Total types in codebase: ${data.allTypes.length}`);
+      console.log(
+        `[similar-types] Total types in codebase: ${data.allTypes.length}`,
+      );
       console.log(`[similar-types] Options:`, JSON.stringify(options, null, 2));
     }
 
@@ -265,7 +278,13 @@ export class SimilarTypesLinter extends BaseLinter {
       if (type.name.length < (options.minNameLength ?? 3)) return false;
 
       // Must not match ignore patterns or explicit ignore list
-      if (shouldIgnore(type.name, options.ignorePatterns ?? [], options.ignoreTypes ?? [])) return false;
+      if (
+        shouldIgnore(
+          type.name,
+          options.ignorePatterns ?? [],
+          options.ignoreTypes ?? [],
+        )
+      ) return false;
 
       // Must meet minimum field count
       if (type.fields.length < (options.minFieldCount ?? 2)) return false;
@@ -276,7 +295,11 @@ export class SimilarTypesLinter extends BaseLinter {
     // Debug: Log filtered types
     if (Deno.env.get("DEBUG_LINTERS")) {
       console.log(`[similar-types] Types after filtering: ${types.length}`);
-      types.forEach(t => console.log(`  - ${t.name} (${t.fields.length} fields) in ${t.location.file}`));
+      types.forEach((t) =>
+        console.log(
+          `  - ${t.name} (${t.fields.length} fields) in ${t.location.file}`,
+        )
+      );
     }
 
     // Compare all pairs for name similarity
@@ -298,16 +321,25 @@ export class SimilarTypesLinter extends BaseLinter {
 
         // Skip if in the same file (likely intentional related types)
         // Unless they have the exact same name
-        if (typeA.location.file === typeB.location.file && typeA.name !== typeB.name) {
+        if (
+          typeA.location.file === typeB.location.file &&
+          typeA.name !== typeB.name
+        ) {
           if (Deno.env.get("DEBUG_LINTERS")) {
-            console.log(`[similar-types] Skipping same-file pair: ${typeA.name} vs ${typeB.name}`);
+            console.log(
+              `[similar-types] Skipping same-file pair: ${typeA.name} vs ${typeB.name}`,
+            );
           }
           continue;
         }
 
         const issue = this.checkPair(typeA, typeB, options);
         if (Deno.env.get("DEBUG_LINTERS")) {
-          console.log(`[similar-types] Checked pair: ${typeA.name} vs ${typeB.name}, issue: ${issue ? issue.kind : 'none'}`);
+          console.log(
+            `[similar-types] Checked pair: ${typeA.name} vs ${typeB.name}, issue: ${
+              issue ? issue.kind : "none"
+            }`,
+          );
         }
         if (issue) {
           issues.push(issue);
@@ -334,12 +366,19 @@ export class SimilarTypesLinter extends BaseLinter {
   private checkPair(
     typeA: TypeInfo,
     typeB: TypeInfo,
-    options: SimilarTypesOptions
+    options: SimilarTypesOptions,
   ): Issue | null {
-    const { similarity, level: _level, metrics } = compareIdentifiers(typeA.name, typeB.name);
+    const { similarity, level: _level, metrics } = compareIdentifiers(
+      typeA.name,
+      typeB.name,
+    );
 
     if (Deno.env.get("DEBUG_LINTERS")) {
-      console.log(`[similar-types] compareIdentifiers("${typeA.name}", "${typeB.name}") = ${similarity.toFixed(3)}, threshold: ${options.minSimilarity ?? 0.7}`);
+      console.log(
+        `[similar-types] compareIdentifiers("${typeA.name}", "${typeB.name}") = ${
+          similarity.toFixed(3)
+        }, threshold: ${options.minSimilarity ?? 0.7}`,
+      );
     }
 
     // Exact same name in different files
@@ -370,8 +409,7 @@ export class SimilarTypesLinter extends BaseLinter {
           `This likely indicates duplicate types that should be consolidated.`,
         {
           relatedLocations: [typeB.location],
-          suggestion:
-            `Consider:\n` +
+          suggestion: `Consider:\n` +
             `1. If these represent the same concept: consolidate into one type in packages/types/\n` +
             `2. If they're different: rename to clarify the distinction\n` +
             `3. If one extends the other: use proper inheritance/extension\n\n` +
@@ -383,7 +421,7 @@ export class SimilarTypesLinter extends BaseLinter {
             typeB: typeB.name,
             metrics,
           },
-        }
+        },
       );
     }
 
@@ -394,8 +432,7 @@ export class SimilarTypesLinter extends BaseLinter {
         `Review to ensure they serve distinct purposes.`,
       {
         relatedLocations: [typeB.location],
-        suggestion:
-          `If these types represent related concepts, consider:\n` +
+        suggestion: `If these types represent related concepts, consider:\n` +
           `1. Consolidating them into one type\n` +
           `2. Creating a base type they both extend\n` +
           `3. Renaming for clarity\n\n` +
@@ -406,7 +443,7 @@ export class SimilarTypesLinter extends BaseLinter {
           typeA: typeA.name,
           typeB: typeB.name,
         },
-      }
+      },
     );
   }
 
@@ -416,7 +453,7 @@ export class SimilarTypesLinter extends BaseLinter {
   private checkSameNameTypes(
     typeA: TypeInfo,
     typeB: TypeInfo,
-    _options: SimilarTypesOptions
+    _options: SimilarTypesOptions,
   ): Issue | null {
     // Same name in different files is definitely suspicious
     const fieldComparison = compareFields(typeA.fields, typeB.fields);
@@ -426,12 +463,13 @@ export class SimilarTypesLinter extends BaseLinter {
       return this.issue(
         "duplicate-type",
         typeA.location,
-        `Type "${typeA.name}" exists in multiple files with nearly identical structure (${(fieldComparison.combined * 100).toFixed(0)}% match). ` +
+        `Type "${typeA.name}" exists in multiple files with nearly identical structure (${
+          (fieldComparison.combined * 100).toFixed(0)
+        }% match). ` +
           `This is duplicate code that should be consolidated.`,
         {
           relatedLocations: [typeB.location],
-          suggestion:
-            `IMMEDIATE ACTION REQUIRED:\n` +
+          suggestion: `IMMEDIATE ACTION REQUIRED:\n` +
             `1. Determine which is the canonical definition\n` +
             `2. Move to packages/types/ (if shared) or local types/ directory\n` +
             `3. Update all imports to use the single source\n` +
@@ -444,7 +482,7 @@ export class SimilarTypesLinter extends BaseLinter {
             typeB: formatType(typeB),
             fieldComparison,
           },
-        }
+        },
       );
     } else {
       // Same name but different structure - needs investigation
@@ -455,8 +493,7 @@ export class SimilarTypesLinter extends BaseLinter {
           `This is confusing and error-prone.`,
         {
           relatedLocations: [typeB.location],
-          suggestion:
-            `IMMEDIATE ACTION REQUIRED:\n` +
+          suggestion: `IMMEDIATE ACTION REQUIRED:\n` +
             `1. If they represent the same concept: unify the structure\n` +
             `2. If they're different concepts: rename one for clarity\n` +
             `3. Consider if the difference is intentional or accidental\n\n` +
@@ -470,7 +507,7 @@ export class SimilarTypesLinter extends BaseLinter {
             typeB: formatType(typeB),
             fieldComparison,
           },
-        }
+        },
       );
     }
   }
@@ -481,7 +518,7 @@ export class SimilarTypesLinter extends BaseLinter {
    */
   private checkFieldStructures(
     types: TypeInfo[],
-    options: SimilarTypesOptions
+    options: SimilarTypesOptions,
   ): Issue[] {
     const issues: Issue[] = [];
     const threshold = options.fieldSimilarityThreshold ?? 0.8;
@@ -489,7 +526,7 @@ export class SimilarTypesLinter extends BaseLinter {
 
     // Only check types with enough fields
     const typesWithFields = types.filter(
-      (t) => t.fields.length >= (options.minFieldCount ?? 2)
+      (t) => t.fields.length >= (options.minFieldCount ?? 2),
     );
 
     for (let i = 0; i < typesWithFields.length; i++) {
@@ -501,7 +538,10 @@ export class SimilarTypesLinter extends BaseLinter {
         if (typeA.name === typeB.name) continue;
 
         // Skip if names are already similar (would be caught by name check)
-        const { similarity: nameSim } = compareIdentifiers(typeA.name, typeB.name);
+        const { similarity: nameSim } = compareIdentifiers(
+          typeA.name,
+          typeB.name,
+        );
         if (nameSim > 0.5) continue;
 
         // Create unique key
@@ -521,12 +561,13 @@ export class SimilarTypesLinter extends BaseLinter {
             this.issue(
               "similar-structure",
               typeA.location,
-              `Types "${typeA.name}" and "${typeB.name}" have very similar field structures (${(fieldComparison.combined * 100).toFixed(0)}% match) ` +
+              `Types "${typeA.name}" and "${typeB.name}" have very similar field structures (${
+                (fieldComparison.combined * 100).toFixed(0)
+              }% match) ` +
                 `but different names. Consider consolidating or creating a base type.`,
               {
                 relatedLocations: [typeB.location],
-                suggestion:
-                  `These types have similar structures:\n` +
+                suggestion: `These types have similar structures:\n` +
                   `  - ${typeA.name} at ${locationString(typeA)}\n` +
                   `  - ${typeB.name} at ${locationString(typeB)}\n\n` +
                   `Consider:\n` +
@@ -540,8 +581,8 @@ export class SimilarTypesLinter extends BaseLinter {
                   fieldsB: fieldNames(typeB),
                   fieldComparison,
                 },
-              }
-            )
+              },
+            ),
           );
         }
       }

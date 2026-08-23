@@ -8,13 +8,13 @@ import type { LinterConfig } from "@hiisi/viola";
 import { assertEquals, assertExists } from "@std/assert";
 import { SimilarTypesLinter } from "./similar-types.ts";
 import {
-    defaultConfig,
-    expectNoViolations,
-    first,
-    mockCodebase,
-    mockField,
-    mockFile,
-    mockType,
+  defaultConfig,
+  expectNoViolations,
+  first,
+  mockCodebase,
+  mockField,
+  mockFile,
+  mockType,
 } from "./test_utils.ts";
 
 const linter = new SimilarTypesLinter();
@@ -29,9 +29,27 @@ Deno.test("similar-types - no violations for unique type names", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "User", file: "src/app.ts", line: 1, fields: [mockField("id", "string"), mockField("name", "string")] }),
-          mockType({ name: "Order", file: "src/app.ts", line: 10, fields: [mockField("id", "string"), mockField("total", "number")] }),
-          mockType({ name: "Config", file: "src/app.ts", line: 20, fields: [mockField("apiKey", "string"), mockField("debug", "boolean")] }),
+          mockType({
+            name: "User",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("name", "string")],
+          }),
+          mockType({
+            name: "Order",
+            file: "src/app.ts",
+            line: 10,
+            fields: [mockField("id", "string"), mockField("total", "number")],
+          }),
+          mockType({
+            name: "Config",
+            file: "src/app.ts",
+            line: 20,
+            fields: [
+              mockField("apiKey", "string"),
+              mockField("debug", "boolean"),
+            ],
+          }),
         ],
       }),
     ],
@@ -50,13 +68,23 @@ Deno.test("similar-types - reports types with similar names (above threshold)", 
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "UserRequest", file: "src/app.ts", line: 1, fields: [mockField("id", "string"), mockField("name", "string")] }),
+          mockType({
+            name: "UserRequest",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("name", "string")],
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         types: [
-          mockType({ name: "UseRequest", file: "src/utils.ts", line: 1, fields: [mockField("id", "string"), mockField("email", "string")] }),
+          mockType({
+            name: "UseRequest",
+            file: "src/utils.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("email", "string")],
+          }),
         ],
       }),
     ],
@@ -85,13 +113,23 @@ Deno.test("similar-types - reports types with moderately similar names (medium s
       mockFile({
         path: "src/user.ts",
         types: [
-          mockType({ name: "UserData", file: "src/user.ts", line: 1, fields: [mockField("id", "string"), mockField("name", "string")] }),
+          mockType({
+            name: "UserData",
+            file: "src/user.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("name", "string")],
+          }),
         ],
       }),
       mockFile({
         path: "src/admin.ts",
         types: [
-          mockType({ name: "UserDate", file: "src/admin.ts", line: 1, fields: [mockField("id", "string"), mockField("role", "string")] }),
+          mockType({
+            name: "UserDate",
+            file: "src/admin.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("role", "string")],
+          }),
         ],
       }),
     ],
@@ -118,22 +156,22 @@ Deno.test("similar-types - identical names in different files produces duplicate
       mockFile({
         path: "src/user.ts",
         types: [
-          mockType({ 
-            name: "Person", 
-            file: "src/user.ts", 
-            line: 1, 
-            fields: [mockField("name", "string"), mockField("age", "number")] 
+          mockType({
+            name: "Person",
+            file: "src/user.ts",
+            line: 1,
+            fields: [mockField("name", "string"), mockField("age", "number")],
           }),
         ],
       }),
       mockFile({
         path: "src/admin.ts",
         types: [
-          mockType({ 
-            name: "Person", 
-            file: "src/admin.ts", 
-            line: 1, 
-            fields: [mockField("name", "string"), mockField("age", "number")] 
+          mockType({
+            name: "Person",
+            file: "src/admin.ts",
+            line: 1,
+            fields: [mockField("name", "string"), mockField("age", "number")],
           }),
         ],
       }),
@@ -151,22 +189,28 @@ Deno.test("similar-types - same name but different structure produces same-name-
       mockFile({
         path: "src/user.ts",
         types: [
-          mockType({ 
-            name: "Config", 
-            file: "src/user.ts", 
-            line: 1, 
-            fields: [mockField("apiKey", "string"), mockField("timeout", "number")] 
+          mockType({
+            name: "Config",
+            file: "src/user.ts",
+            line: 1,
+            fields: [
+              mockField("apiKey", "string"),
+              mockField("timeout", "number"),
+            ],
           }),
         ],
       }),
       mockFile({
         path: "src/admin.ts",
         types: [
-          mockType({ 
-            name: "Config", 
-            file: "src/admin.ts", 
-            line: 1, 
-            fields: [mockField("database", "string"), mockField("port", "number")] 
+          mockType({
+            name: "Config",
+            file: "src/admin.ts",
+            line: 1,
+            fields: [
+              mockField("database", "string"),
+              mockField("port", "number"),
+            ],
           }),
         ],
       }),
@@ -175,7 +219,10 @@ Deno.test("similar-types - same name but different structure produces same-name-
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).kind, "similar-types/same-name-different-structure");
+  assertEquals(
+    first(violations).kind,
+    "similar-types/same-name-different-structure",
+  );
 });
 
 // =============================================================================
@@ -188,22 +235,30 @@ Deno.test("similar-types - detects types with similar field structures", () => {
       mockFile({
         path: "src/user.ts",
         types: [
-          mockType({ 
-            name: "UserRecord", 
-            file: "src/user.ts", 
-            line: 1, 
-            fields: [mockField("id", "string"), mockField("name", "string"), mockField("email", "string")] 
+          mockType({
+            name: "UserRecord",
+            file: "src/user.ts",
+            line: 1,
+            fields: [
+              mockField("id", "string"),
+              mockField("name", "string"),
+              mockField("email", "string"),
+            ],
           }),
         ],
       }),
       mockFile({
         path: "src/admin.ts",
         types: [
-          mockType({ 
-            name: "AdminAccount", 
-            file: "src/admin.ts", 
-            line: 1, 
-            fields: [mockField("id", "string"), mockField("name", "string"), mockField("email", "string")] 
+          mockType({
+            name: "AdminAccount",
+            file: "src/admin.ts",
+            line: 1,
+            fields: [
+              mockField("id", "string"),
+              mockField("name", "string"),
+              mockField("email", "string"),
+            ],
           }),
         ],
       }),
@@ -225,8 +280,18 @@ Deno.test("similar-types - ignores types with 'Props' suffix by default", () => 
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "UserProps", file: "src/app.ts", line: 1, fields: [mockField("name", "string")] }),
-          mockType({ name: "UserProp", file: "src/app.ts", line: 10, fields: [mockField("name", "string")] }),
+          mockType({
+            name: "UserProps",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("name", "string")],
+          }),
+          mockType({
+            name: "UserProp",
+            file: "src/app.ts",
+            line: 10,
+            fields: [mockField("name", "string")],
+          }),
         ],
       }),
     ],
@@ -242,8 +307,18 @@ Deno.test("similar-types - ignores types with 'Options' suffix by default", () =
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "FetchOptions", file: "src/app.ts", line: 1, fields: [mockField("timeout", "number")] }),
-          mockType({ name: "FetchOption", file: "src/app.ts", line: 10, fields: [mockField("timeout", "number")] }),
+          mockType({
+            name: "FetchOptions",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("timeout", "number")],
+          }),
+          mockType({
+            name: "FetchOption",
+            file: "src/app.ts",
+            line: 10,
+            fields: [mockField("timeout", "number")],
+          }),
         ],
       }),
     ],
@@ -259,8 +334,18 @@ Deno.test("similar-types - ignores types with 'Config' suffix by default", () =>
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "DatabaseConfig", file: "src/app.ts", line: 1, fields: [mockField("host", "string")] }),
-          mockType({ name: "DatabaseConfigs", file: "src/app.ts", line: 10, fields: [mockField("host", "string")] }),
+          mockType({
+            name: "DatabaseConfig",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("host", "string")],
+          }),
+          mockType({
+            name: "DatabaseConfigs",
+            file: "src/app.ts",
+            line: 10,
+            fields: [mockField("host", "string")],
+          }),
         ],
       }),
     ],
@@ -276,8 +361,18 @@ Deno.test("similar-types - ignores types with 'I' prefix by default (IUser patte
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "IUser", file: "src/app.ts", line: 1, fields: [mockField("id", "string")] }),
-          mockType({ name: "IUsers", file: "src/app.ts", line: 10, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "IUser",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("id", "string")],
+          }),
+          mockType({
+            name: "IUsers",
+            file: "src/app.ts",
+            line: 10,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -300,13 +395,29 @@ Deno.test("similar-types - respects ignoreTypes option", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "FileCondition", file: "src/app.ts", line: 1, fields: [mockField("path", "string"), mockField("match", "boolean")] }),
+          mockType({
+            name: "FileCondition",
+            file: "src/app.ts",
+            line: 1,
+            fields: [
+              mockField("path", "string"),
+              mockField("match", "boolean"),
+            ],
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         types: [
-          mockType({ name: "LinterCondition", file: "src/utils.ts", line: 1, fields: [mockField("id", "string"), mockField("enabled", "boolean")] }),
+          mockType({
+            name: "LinterCondition",
+            file: "src/utils.ts",
+            line: 1,
+            fields: [
+              mockField("id", "string"),
+              mockField("enabled", "boolean"),
+            ],
+          }),
         ],
       }),
     ],
@@ -326,8 +437,18 @@ Deno.test("similar-types - ignores similar types in same file (unless exact name
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "UserData", file: "src/app.ts", line: 1, fields: [mockField("id", "string"), mockField("name", "string")] }),
-          mockType({ name: "UserDatas", file: "src/app.ts", line: 10, fields: [mockField("id", "string"), mockField("email", "string")] }),
+          mockType({
+            name: "UserData",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("name", "string")],
+          }),
+          mockType({
+            name: "UserDatas",
+            file: "src/app.ts",
+            line: 10,
+            fields: [mockField("id", "string"), mockField("email", "string")],
+          }),
         ],
       }),
     ],
@@ -348,13 +469,23 @@ Deno.test("similar-types - configurable similarity threshold", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "UserEntity", file: "src/app.ts", line: 1, fields: [mockField("id", "string"), mockField("name", "string")] }),
+          mockType({
+            name: "UserEntity",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("name", "string")],
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         types: [
-          mockType({ name: "UserEntities", file: "src/utils.ts", line: 1, fields: [mockField("id", "string"), mockField("email", "string")] }),
+          mockType({
+            name: "UserEntities",
+            file: "src/utils.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("email", "string")],
+          }),
         ],
       }),
     ],
@@ -366,14 +497,22 @@ Deno.test("similar-types - configurable similarity threshold", () => {
   // With lower threshold (0.5), they should match if they're above 0.5
   const lowConfig: LinterConfig = {
     ...defaultConfig,
-    options: { minSimilarity: 0.5, warningThreshold: 0.5, errorThreshold: 0.85 },
+    options: {
+      minSimilarity: 0.5,
+      warningThreshold: 0.5,
+      errorThreshold: 0.85,
+    },
   };
   const lowViolations = linter.lint(data, lowConfig);
 
   // With high threshold (0.95), they should not match
   const highConfig: LinterConfig = {
     ...defaultConfig,
-    options: { minSimilarity: 0.95, warningThreshold: 0.95, errorThreshold: 0.99 },
+    options: {
+      minSimilarity: 0.95,
+      warningThreshold: 0.95,
+      errorThreshold: 0.99,
+    },
   };
   const highViolations = linter.lint(data, highConfig);
   expectNoViolations(highViolations);
@@ -391,13 +530,23 @@ Deno.test("similar-types - respects minFieldCount option", () => {
         path: "src/app.ts",
         types: [
           // Only 2 fields - should be ignored
-          mockType({ name: "UserData", file: "src/app.ts", line: 1, fields: [mockField("id", "string"), mockField("name", "string")] }),
+          mockType({
+            name: "UserData",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("name", "string")],
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         types: [
-          mockType({ name: "UserDatas", file: "src/utils.ts", line: 1, fields: [mockField("id", "string"), mockField("email", "string")] }),
+          mockType({
+            name: "UserDatas",
+            file: "src/utils.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("email", "string")],
+          }),
         ],
       }),
     ],
@@ -419,13 +568,23 @@ Deno.test("similar-types - respects minNameLength option", () => {
         path: "src/app.ts",
         types: [
           // Short name - should be ignored
-          mockType({ name: "User", file: "src/app.ts", line: 1, fields: [mockField("id", "string"), mockField("name", "string")] }),
+          mockType({
+            name: "User",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("name", "string")],
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         types: [
-          mockType({ name: "Users", file: "src/utils.ts", line: 1, fields: [mockField("id", "string"), mockField("email", "string")] }),
+          mockType({
+            name: "Users",
+            file: "src/utils.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("email", "string")],
+          }),
         ],
       }),
     ],
@@ -446,22 +605,30 @@ Deno.test("similar-types - can disable field structure checking", () => {
       mockFile({
         path: "src/user.ts",
         types: [
-          mockType({ 
-            name: "UserRecord", 
-            file: "src/user.ts", 
-            line: 1, 
-            fields: [mockField("id", "string"), mockField("name", "string"), mockField("email", "string")] 
+          mockType({
+            name: "UserRecord",
+            file: "src/user.ts",
+            line: 1,
+            fields: [
+              mockField("id", "string"),
+              mockField("name", "string"),
+              mockField("email", "string"),
+            ],
           }),
         ],
       }),
       mockFile({
         path: "src/admin.ts",
         types: [
-          mockType({ 
-            name: "AdminAccount", 
-            file: "src/admin.ts", 
-            line: 1, 
-            fields: [mockField("id", "string"), mockField("name", "string"), mockField("email", "string")] 
+          mockType({
+            name: "AdminAccount",
+            file: "src/admin.ts",
+            line: 1,
+            fields: [
+              mockField("id", "string"),
+              mockField("name", "string"),
+              mockField("email", "string"),
+            ],
           }),
         ],
       }),
@@ -503,7 +670,12 @@ Deno.test("similar-types - single type produces no violations", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "User", file: "src/app.ts", line: 1, fields: [mockField("id", "string"), mockField("name", "string")] }),
+          mockType({
+            name: "User",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("name", "string")],
+          }),
         ],
       }),
     ],
@@ -520,13 +692,23 @@ Deno.test("similar-types - types with too few fields are ignored", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "Result", file: "src/app.ts", line: 1, fields: [mockField("value", "string")] }),
+          mockType({
+            name: "Result",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("value", "string")],
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         types: [
-          mockType({ name: "Results", file: "src/utils.ts", line: 1, fields: [mockField("value", "string")] }),
+          mockType({
+            name: "Results",
+            file: "src/utils.ts",
+            line: 1,
+            fields: [mockField("value", "string")],
+          }),
         ],
       }),
     ],
@@ -542,13 +724,23 @@ Deno.test("similar-types - types with empty fields are ignored", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "EmptyType", file: "src/app.ts", line: 1, fields: [] }),
+          mockType({
+            name: "EmptyType",
+            file: "src/app.ts",
+            line: 1,
+            fields: [],
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         types: [
-          mockType({ name: "EmptyTypes", file: "src/utils.ts", line: 1, fields: [] }),
+          mockType({
+            name: "EmptyTypes",
+            file: "src/utils.ts",
+            line: 1,
+            fields: [],
+          }),
         ],
       }),
     ],
@@ -568,13 +760,23 @@ Deno.test("similar-types - violation has correct severity", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "UserData", file: "src/app.ts", line: 1, fields: [mockField("id", "string"), mockField("name", "string")] }),
+          mockType({
+            name: "UserData",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("name", "string")],
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         types: [
-          mockType({ name: "UserDatas", file: "src/utils.ts", line: 1, fields: [mockField("id", "string"), mockField("email", "string")] }),
+          mockType({
+            name: "UserDatas",
+            file: "src/utils.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("email", "string")],
+          }),
         ],
       }),
     ],
@@ -600,13 +802,23 @@ Deno.test("similar-types - violation includes related locations", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "UserData", file: "src/app.ts", line: 10, fields: [mockField("id", "string"), mockField("name", "string")] }),
+          mockType({
+            name: "UserData",
+            file: "src/app.ts",
+            line: 10,
+            fields: [mockField("id", "string"), mockField("name", "string")],
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         types: [
-          mockType({ name: "UserDatas", file: "src/utils.ts", line: 20, fields: [mockField("id", "string"), mockField("email", "string")] }),
+          mockType({
+            name: "UserDatas",
+            file: "src/utils.ts",
+            line: 20,
+            fields: [mockField("id", "string"), mockField("email", "string")],
+          }),
         ],
       }),
     ],
@@ -634,13 +846,23 @@ Deno.test("similar-types - violation includes suggestion", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "UserData", file: "src/app.ts", line: 1, fields: [mockField("id", "string"), mockField("name", "string")] }),
+          mockType({
+            name: "UserData",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("name", "string")],
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         types: [
-          mockType({ name: "UserDatas", file: "src/utils.ts", line: 1, fields: [mockField("id", "string"), mockField("email", "string")] }),
+          mockType({
+            name: "UserDatas",
+            file: "src/utils.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("email", "string")],
+          }),
         ],
       }),
     ],
@@ -667,13 +889,23 @@ Deno.test("similar-types - violation has correct linter name", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "UserData", file: "src/app.ts", line: 1, fields: [mockField("id", "string"), mockField("name", "string")] }),
+          mockType({
+            name: "UserData",
+            file: "src/app.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("name", "string")],
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         types: [
-          mockType({ name: "UserDatas", file: "src/utils.ts", line: 1, fields: [mockField("id", "string"), mockField("email", "string")] }),
+          mockType({
+            name: "UserDatas",
+            file: "src/utils.ts",
+            line: 1,
+            fields: [mockField("id", "string"), mockField("email", "string")],
+          }),
         ],
       }),
     ],

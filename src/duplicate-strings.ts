@@ -7,14 +7,14 @@
  */
 
 import {
-    BaseLinter,
-    type CodebaseData,
-    type Issue,
-    type IssueCatalog,
-    type LinterConfig,
-    type LinterDataRequirements,
-    type LinterMeta,
-    type StringLiteral,
+  BaseLinter,
+  type CodebaseData,
+  type Issue,
+  type IssueCatalog,
+  type LinterConfig,
+  type LinterDataRequirements,
+  type LinterMeta,
+  type StringLiteral,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -50,10 +50,10 @@ export interface DuplicateStringsOptions {
   /**
    * Explicit list of strings to ignore. Use this as an escape hatch for
    * project-specific strings that are intentionally repeated.
-   * 
+   *
    * Unlike patterns, this requires you to explicitly list each string,
    * forcing you to think about whether it truly should be exempt.
-   * 
+   *
    * @default []
    * @example ["my-app-name", "some-repeated-key"]
    */
@@ -128,8 +128,8 @@ function looksLikePath(str: string): boolean {
 
 function looksLikeUrl(str: string): boolean {
   return /^(https?|ftp|file|ws|wss):\/\//i.test(str) ||
-         str.startsWith("//") ||
-         /^[a-z][a-z0-9+.-]*:/i.test(str);
+    str.startsWith("//") ||
+    /^[a-z][a-z0-9+.-]*:/i.test(str);
 }
 
 function looksLikeCssClasses(str: string): boolean {
@@ -148,13 +148,17 @@ function shouldIgnore(str: string, options: DuplicateStringsOptions): boolean {
   if (options.ignoreUrls && looksLikeUrl(str)) return true;
   if (options.ignoreCssClasses && looksLikeCssClasses(str)) return true;
   // Ignore typeof comparison strings (object, function, string, etc.)
-  if ((options.ignoreTypeofStrings ?? true) && TYPEOF_STRINGS.has(str)) return true;
+  if ((options.ignoreTypeofStrings ?? true) && TYPEOF_STRINGS.has(str)) {
+    return true;
+  }
   // Ignore explicitly listed strings
   if (options.ignoreStrings?.includes(str)) return true;
   return false;
 }
 
-function groupByValue(strings: readonly StringLiteral[]): Map<string, StringLiteral[]> {
+function groupByValue(
+  strings: readonly StringLiteral[],
+): Map<string, StringLiteral[]> {
   const groups = new Map<string, StringLiteral[]>();
   for (const str of strings) {
     const existing = groups.get(str.value);
@@ -191,7 +195,8 @@ export class DuplicateStringsLinter extends BaseLinter {
   readonly meta: LinterMeta = {
     id: "duplicate-strings",
     name: "Duplicate Strings",
-    description: "Detects string literals that appear multiple times and should be extracted to constants",
+    description:
+      "Detects string literals that appear multiple times and should be extracted to constants",
   };
 
   readonly catalog: IssueCatalog = {
@@ -212,7 +217,7 @@ export class DuplicateStringsLinter extends BaseLinter {
     const options = getOptions(config);
 
     const stringsToCheck = data.allStrings.filter(
-      (str) => !shouldIgnore(str.value, options)
+      (str) => !shouldIgnore(str.value, options),
     );
 
     const groups = groupByValue(stringsToCheck);
@@ -233,7 +238,10 @@ export class DuplicateStringsLinter extends BaseLinter {
     return issues;
   }
 
-  private createDuplicateIssue(value: string, occurrences: StringLiteral[]): Issue {
+  private createDuplicateIssue(
+    value: string,
+    occurrences: StringLiteral[],
+  ): Issue {
     const count = occurrences.length;
     const firstOccurrence = occurrences[0]!;
     const suggestedName = suggestConstName(value);
@@ -254,11 +262,12 @@ export class DuplicateStringsLinter extends BaseLinter {
     return this.issue(
       "duplicate",
       firstOccurrence.location,
-      `String ${formatString(value)} appears ${count} times across ${fileCount} file(s). Consider extracting to a constant.`,
+      `String ${
+        formatString(value)
+      } appears ${count} times across ${fileCount} file(s). Consider extracting to a constant.`,
       {
         confidence,
-        suggestion:
-          `Create a constant:\n` +
+        suggestion: `Create a constant:\n` +
           `  export const ${suggestedName} = ${formatString(value, 80)};\n\n` +
           `Locations:\n${locationList}${moreLocations}`,
         relatedLocations: occurrences.slice(1).map((o) => o.location),
@@ -269,9 +278,10 @@ export class DuplicateStringsLinter extends BaseLinter {
           suggestedName,
           files,
         },
-      }
+      },
     );
   }
 }
 
-export const duplicateStringsLinter: DuplicateStringsLinter = new DuplicateStringsLinter();
+export const duplicateStringsLinter: DuplicateStringsLinter =
+  new DuplicateStringsLinter();

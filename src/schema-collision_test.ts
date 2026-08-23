@@ -8,14 +8,14 @@ import type { LinterConfig } from "@hiisi/viola";
 import { assertEquals } from "@std/assert";
 import { SchemaCollisionLinter } from "./schema-collision.ts";
 import {
-    defaultConfig,
-    expectNoViolations,
-    first,
-    mockCodebase,
-    mockFile,
-    mockType,
-    mockSchema,
-    mockField,
+  defaultConfig,
+  expectNoViolations,
+  first,
+  mockCodebase,
+  mockField,
+  mockFile,
+  mockSchema,
+  mockType,
 } from "./test_utils.ts";
 
 const linter = new SchemaCollisionLinter();
@@ -30,7 +30,11 @@ Deno.test("schema-collision - no violations when no schemas exist", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "User", isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "User",
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -47,7 +51,11 @@ Deno.test("schema-collision - no violations when names don't collide", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "Order", isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "Order",
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -70,7 +78,13 @@ Deno.test("schema-collision - reports exact name collision", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "User", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "User",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -90,8 +104,20 @@ Deno.test("schema-collision - reports multiple exact collisions", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "User", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
-          mockType({ name: "Order", file: "src/app.ts", line: 20, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "User",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
+          mockType({
+            name: "Order",
+            file: "src/app.ts",
+            line: 20,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -115,7 +141,13 @@ Deno.test("schema-collision - reports case-insensitive collision", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "user", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "user",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -126,7 +158,10 @@ Deno.test("schema-collision - reports case-insensitive collision", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).kind, "schema-collision/case-insensitive-collision");
+  assertEquals(
+    first(violations).kind,
+    "schema-collision/case-insensitive-collision",
+  );
 });
 
 Deno.test("schema-collision - can disable case-insensitive checking", () => {
@@ -140,7 +175,11 @@ Deno.test("schema-collision - can disable case-insensitive checking", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "user", isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "user",
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -163,7 +202,13 @@ Deno.test("schema-collision - reports variant with Type suffix", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "UserType", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "UserType",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -174,7 +219,10 @@ Deno.test("schema-collision - reports variant with Type suffix", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).kind, "schema-collision/variant-name-collision");
+  assertEquals(
+    first(violations).kind,
+    "schema-collision/variant-name-collision",
+  );
 });
 
 Deno.test("schema-collision - reports variant with Interface suffix", () => {
@@ -183,7 +231,13 @@ Deno.test("schema-collision - reports variant with Interface suffix", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "UserInterface", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "UserInterface",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -194,7 +248,10 @@ Deno.test("schema-collision - reports variant with Interface suffix", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).kind, "schema-collision/variant-name-collision");
+  assertEquals(
+    first(violations).kind,
+    "schema-collision/variant-name-collision",
+  );
 });
 
 Deno.test("schema-collision - reports variant with I prefix", () => {
@@ -203,7 +260,13 @@ Deno.test("schema-collision - reports variant with I prefix", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "IUser", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "IUser",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -214,7 +277,10 @@ Deno.test("schema-collision - reports variant with I prefix", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).kind, "schema-collision/variant-name-collision");
+  assertEquals(
+    first(violations).kind,
+    "schema-collision/variant-name-collision",
+  );
 });
 
 Deno.test("schema-collision - reports variant with T prefix", () => {
@@ -223,7 +289,13 @@ Deno.test("schema-collision - reports variant with T prefix", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "TUser", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "TUser",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -234,7 +306,10 @@ Deno.test("schema-collision - reports variant with T prefix", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).kind, "schema-collision/variant-name-collision");
+  assertEquals(
+    first(violations).kind,
+    "schema-collision/variant-name-collision",
+  );
 });
 
 Deno.test("schema-collision - can disable variant checking", () => {
@@ -248,7 +323,11 @@ Deno.test("schema-collision - can disable variant checking", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "UserType", isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "UserType",
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -271,7 +350,11 @@ Deno.test("schema-collision - ignores types in .generated.ts files", () => {
       mockFile({
         path: "src/types.generated.ts",
         types: [
-          mockType({ name: "User", isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "User",
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -290,7 +373,11 @@ Deno.test("schema-collision - ignores types in .gen.ts files", () => {
       mockFile({
         path: "src/types.gen.ts",
         types: [
-          mockType({ name: "User", isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "User",
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -309,7 +396,11 @@ Deno.test("schema-collision - ignores types in codegen directories", () => {
       mockFile({
         path: "src/codegen/types.ts",
         types: [
-          mockType({ name: "User", isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "User",
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -329,7 +420,7 @@ Deno.test("schema-collision - ignores types in codegen directories", () => {
 Deno.test("schema-collision - respects ignoreSchemaPatterns option", () => {
   const config: LinterConfig = {
     ...defaultConfig,
-    options: { 
+    options: {
       ignoreSchemaPatterns: [/^Test/],
     },
   };
@@ -339,7 +430,11 @@ Deno.test("schema-collision - respects ignoreSchemaPatterns option", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "TestUser", isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "TestUser",
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -355,7 +450,7 @@ Deno.test("schema-collision - respects ignoreSchemaPatterns option", () => {
 Deno.test("schema-collision - respects ignoreTypePatterns option", () => {
   const config: LinterConfig = {
     ...defaultConfig,
-    options: { 
+    options: {
       ignoreTypePatterns: [/^Internal/],
     },
   };
@@ -365,12 +460,19 @@ Deno.test("schema-collision - respects ignoreTypePatterns option", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "InternalUser", isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "InternalUser",
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
     schemas: [
-      mockSchema({ name: "InternalUser", file: "schemas/internal-user.schema.json" }),
+      mockSchema({
+        name: "InternalUser",
+        file: "schemas/internal-user.schema.json",
+      }),
     ],
   });
 
@@ -381,7 +483,7 @@ Deno.test("schema-collision - respects ignoreTypePatterns option", () => {
 Deno.test("schema-collision - can customize variant suffixes", () => {
   const config: LinterConfig = {
     ...defaultConfig,
-    options: { 
+    options: {
       variantSuffixes: ["Entity"],
     },
   };
@@ -391,7 +493,13 @@ Deno.test("schema-collision - can customize variant suffixes", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "UserEntity", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "UserEntity",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -402,13 +510,16 @@ Deno.test("schema-collision - can customize variant suffixes", () => {
 
   const violations = linter.lint(data, config);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).kind, "schema-collision/variant-name-collision");
+  assertEquals(
+    first(violations).kind,
+    "schema-collision/variant-name-collision",
+  );
 });
 
 Deno.test("schema-collision - can customize variant prefixes", () => {
   const config: LinterConfig = {
     ...defaultConfig,
-    options: { 
+    options: {
       variantPrefixes: ["C"],
     },
   };
@@ -418,7 +529,13 @@ Deno.test("schema-collision - can customize variant prefixes", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "CUser", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "CUser",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -429,7 +546,10 @@ Deno.test("schema-collision - can customize variant prefixes", () => {
 
   const violations = linter.lint(data, config);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).kind, "schema-collision/variant-name-collision");
+  assertEquals(
+    first(violations).kind,
+    "schema-collision/variant-name-collision",
+  );
 });
 
 Deno.test("schema-collision - can disable exact match checking", () => {
@@ -443,7 +563,11 @@ Deno.test("schema-collision - can disable exact match checking", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "User", isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "User",
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -466,7 +590,13 @@ Deno.test("schema-collision - exact match takes precedence over other matches", 
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "User", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "User",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -514,7 +644,11 @@ Deno.test("schema-collision - schemas without colliding types produce no violati
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "Config", isExported: true, fields: [mockField("key", "string")] }),
+          mockType({
+            name: "Config",
+            isExported: true,
+            fields: [mockField("key", "string")],
+          }),
         ],
       }),
     ],
@@ -534,7 +668,11 @@ Deno.test("schema-collision - non-exported types are not checked", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "User", isExported: false, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "User",
+            isExported: false,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -557,7 +695,13 @@ Deno.test("schema-collision - violation has correct linter name", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "User", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "User",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -576,7 +720,13 @@ Deno.test("schema-collision - violation has correct severity", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "User", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "User",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -595,7 +745,13 @@ Deno.test("schema-collision - violation includes related locations", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "User", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "User",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],
@@ -616,7 +772,13 @@ Deno.test("schema-collision - violation includes suggestion", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ name: "User", file: "src/app.ts", line: 10, isExported: true, fields: [mockField("id", "string")] }),
+          mockType({
+            name: "User",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+            fields: [mockField("id", "string")],
+          }),
         ],
       }),
     ],

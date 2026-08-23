@@ -8,14 +8,14 @@ import type { LinterConfig } from "@hiisi/viola";
 import { assertEquals } from "@std/assert";
 import { MissingDocsLinter } from "./missing-docs.ts";
 import {
-    defaultConfig,
-    expectNoViolations,
-    first,
-    mockCodebase,
-    mockFile,
-    mockFunction,
-    mockType,
-    mockParam,
+  defaultConfig,
+  expectNoViolations,
+  first,
+  mockCodebase,
+  mockFile,
+  mockFunction,
+  mockParam,
+  mockType,
 } from "./test_utils.ts";
 
 const linter = new MissingDocsLinter();
@@ -30,15 +30,15 @@ Deno.test("missing-docs - no violations for documented exports", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "doSomething", 
+          mockFunction({
+            name: "doSomething",
             isExported: true,
             jsDoc: "/**\n * Does something useful.\n */",
           }),
         ],
         types: [
-          mockType({ 
-            name: "Config", 
+          mockType({
+            name: "Config",
             isExported: true,
             jsDoc: "/**\n * Configuration options.\n */",
           }),
@@ -57,15 +57,15 @@ Deno.test("missing-docs - no violations for non-exported items", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "internalHelper", 
+          mockFunction({
+            name: "internalHelper",
             isExported: false,
             // No JSDoc
           }),
         ],
         types: [
-          mockType({ 
-            name: "InternalType", 
+          mockType({
+            name: "InternalType",
             isExported: false,
             // No JSDoc
           }),
@@ -88,8 +88,8 @@ Deno.test("missing-docs - reports exported function without JSDoc", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "publicFunction", 
+          mockFunction({
+            name: "publicFunction",
             file: "src/app.ts",
             line: 10,
             isExported: true,
@@ -111,8 +111,8 @@ Deno.test("missing-docs - reports exported function with empty JSDoc", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "publicFunction", 
+          mockFunction({
+            name: "publicFunction",
             file: "src/app.ts",
             line: 10,
             isExported: true,
@@ -134,8 +134,8 @@ Deno.test("missing-docs - reports exported function with whitespace-only JSDoc",
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "publicFunction", 
+          mockFunction({
+            name: "publicFunction",
             file: "src/app.ts",
             line: 10,
             isExported: true,
@@ -161,8 +161,8 @@ Deno.test("missing-docs - reports exported type without JSDoc", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ 
-            name: "PublicType", 
+          mockType({
+            name: "PublicType",
             file: "src/app.ts",
             line: 5,
             isExported: true,
@@ -184,8 +184,8 @@ Deno.test("missing-docs - reports exported interface without JSDoc", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ 
-            name: "PublicInterface", 
+          mockType({
+            name: "PublicInterface",
             kind: "interface",
             file: "src/app.ts",
             line: 5,
@@ -212,10 +212,13 @@ Deno.test("missing-docs - does not require param docs by default", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "process", 
+          mockFunction({
+            name: "process",
             isExported: true,
-            params: [mockParam("data", "string"), mockParam("options", "object")],
+            params: [
+              mockParam("data", "string"),
+              mockParam("options", "object"),
+            ],
             jsDoc: "/**\n * Processes data.\n */",
           }),
         ],
@@ -238,12 +241,15 @@ Deno.test("missing-docs - detects missing param docs when enabled", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "process", 
+          mockFunction({
+            name: "process",
             file: "src/app.ts",
             line: 10,
             isExported: true,
-            params: [mockParam("data", "string"), mockParam("options", "object")],
+            params: [
+              mockParam("data", "string"),
+              mockParam("options", "object"),
+            ],
             jsDoc: "/**\n * Processes data.\n */",
           }),
         ],
@@ -268,11 +274,15 @@ Deno.test("missing-docs - accepts valid param documentation", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "process", 
+          mockFunction({
+            name: "process",
             isExported: true,
-            params: [mockParam("data", "string"), mockParam("options", "object")],
-            jsDoc: "/**\n * Processes data.\n * @param data The input data\n * @param options Processing options\n */",
+            params: [
+              mockParam("data", "string"),
+              mockParam("options", "object"),
+            ],
+            jsDoc:
+              "/**\n * Processes data.\n * @param data The input data\n * @param options Processing options\n */",
           }),
         ],
       }),
@@ -293,8 +303,8 @@ Deno.test("missing-docs - does not require returns docs by default", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "calculate", 
+          mockFunction({
+            name: "calculate",
             isExported: true,
             returnType: "number",
             jsDoc: "/**\n * Calculates something.\n */",
@@ -319,8 +329,8 @@ Deno.test("missing-docs - detects missing returns docs when enabled", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "calculate", 
+          mockFunction({
+            name: "calculate",
             file: "src/app.ts",
             line: 10,
             isExported: true,
@@ -348,8 +358,8 @@ Deno.test("missing-docs - accepts valid returns documentation", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "calculate", 
+          mockFunction({
+            name: "calculate",
             isExported: true,
             returnType: "number",
             jsDoc: "/**\n * Calculates something.\n * @returns The result\n */",
@@ -374,8 +384,8 @@ Deno.test("missing-docs - does not require returns docs for void functions", () 
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "doSomething", 
+          mockFunction({
+            name: "doSomething",
             isExported: true,
             returnType: "void",
             jsDoc: "/**\n * Does something.\n */",
@@ -404,8 +414,8 @@ Deno.test("missing-docs - respects minFunctionLines option", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "shortFunction", 
+          mockFunction({
+            name: "shortFunction",
             isExported: true,
             body: "{ return x; }",
             // No JSDoc, but body is too short
@@ -430,8 +440,8 @@ Deno.test("missing-docs - can disable function docs checking", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "undocumented", 
+          mockFunction({
+            name: "undocumented",
             isExported: true,
             // No JSDoc
           }),
@@ -455,8 +465,8 @@ Deno.test("missing-docs - can disable type docs checking", () => {
       mockFile({
         path: "src/app.ts",
         types: [
-          mockType({ 
-            name: "UndocumentedType", 
+          mockType({
+            name: "UndocumentedType",
             isExported: true,
             // No JSDoc
           }),
@@ -472,7 +482,7 @@ Deno.test("missing-docs - can disable type docs checking", () => {
 Deno.test("missing-docs - respects ignoreFunctionPatterns option", () => {
   const config: LinterConfig = {
     ...defaultConfig,
-    options: { 
+    options: {
       ignoreFunctionPatterns: [/^get/, /^set/],
     },
   };
@@ -496,7 +506,7 @@ Deno.test("missing-docs - respects ignoreFunctionPatterns option", () => {
 Deno.test("missing-docs - respects ignoreTypePatterns option", () => {
   const config: LinterConfig = {
     ...defaultConfig,
-    options: { 
+    options: {
       ignoreTypePatterns: [/Props$/, /Options$/],
     },
   };
@@ -599,12 +609,32 @@ Deno.test("missing-docs - reports multiple undocumented exports", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ name: "funcA", file: "src/app.ts", line: 10, isExported: true }),
-          mockFunction({ name: "funcB", file: "src/app.ts", line: 20, isExported: true }),
+          mockFunction({
+            name: "funcA",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+          }),
+          mockFunction({
+            name: "funcB",
+            file: "src/app.ts",
+            line: 20,
+            isExported: true,
+          }),
         ],
         types: [
-          mockType({ name: "TypeA", file: "src/app.ts", line: 30, isExported: true }),
-          mockType({ name: "TypeB", file: "src/app.ts", line: 40, isExported: true }),
+          mockType({
+            name: "TypeA",
+            file: "src/app.ts",
+            line: 30,
+            isExported: true,
+          }),
+          mockType({
+            name: "TypeB",
+            file: "src/app.ts",
+            line: 40,
+            isExported: true,
+          }),
         ],
       }),
     ],
@@ -653,7 +683,12 @@ Deno.test("missing-docs - violation has correct linter name", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ name: "undocumented", file: "src/app.ts", line: 10, isExported: true }),
+          mockFunction({
+            name: "undocumented",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+          }),
         ],
       }),
     ],
@@ -669,7 +704,12 @@ Deno.test("missing-docs - violation has correct severity", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ name: "undocumented", file: "src/app.ts", line: 10, isExported: true }),
+          mockFunction({
+            name: "undocumented",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+          }),
         ],
       }),
     ],
@@ -685,7 +725,12 @@ Deno.test("missing-docs - violation includes suggestion", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ name: "undocumented", file: "src/app.ts", line: 10, isExported: true }),
+          mockFunction({
+            name: "undocumented",
+            file: "src/app.ts",
+            line: 10,
+            isExported: true,
+          }),
         ],
       }),
     ],

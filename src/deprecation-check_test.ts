@@ -8,11 +8,11 @@ import type { LinterConfig } from "@hiisi/viola";
 import { assertEquals } from "@std/assert";
 import { DeprecationCheckLinter } from "./deprecation-check.ts";
 import {
-    defaultConfig,
-    expectNoViolations,
-    first,
-    mockCodebase,
-    mockFile,
+  defaultConfig,
+  expectNoViolations,
+  first,
+  mockCodebase,
+  mockFile,
 } from "./test_utils.ts";
 
 const linter = new DeprecationCheckLinter();
@@ -61,7 +61,10 @@ Deno.test("deprecation-check - detects @deprecated annotation", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 1);
-  assertEquals(first(violations).kind, "deprecation-check/deprecated-annotation");
+  assertEquals(
+    first(violations).kind,
+    "deprecation-check/deprecated-annotation",
+  );
 });
 
 Deno.test("deprecation-check - detects DEPRECATED marker", () => {
@@ -432,7 +435,7 @@ Deno.test("deprecation-check - ignores deprecation-check.ts itself", () => {
 Deno.test("deprecation-check - respects excludeFiles option", () => {
   const config: LinterConfig = {
     ...defaultConfig,
-    options: { 
+    options: {
       excludeFiles: [/generated/],
     },
   };

@@ -8,13 +8,13 @@
  */
 
 import {
-    BaseLinter,
-    type CodebaseData,
-    type Issue,
-    type IssueCatalog,
-    type LinterConfig,
-    type LinterDataRequirements,
-    type LinterMeta,
+  BaseLinter,
+  type CodebaseData,
+  type Issue,
+  type IssueCatalog,
+  type LinterConfig,
+  type LinterDataRequirements,
+  type LinterMeta,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -117,7 +117,8 @@ export class MissingDocsLinter extends BaseLinter {
     "missing-docs/missing-param-doc": {
       category: "maintainability",
       impact: "trivial",
-      description: "Function JSDoc is missing @param documentation for a parameter",
+      description:
+        "Function JSDoc is missing @param documentation for a parameter",
     },
     "missing-docs/missing-returns-doc": {
       category: "maintainability",
@@ -170,8 +171,8 @@ export class MissingDocsLinter extends BaseLinter {
                     paramCount: func.params.length,
                     hasReturn: func.returnType && func.returnType !== "void",
                   },
-                }
-              )
+                },
+              ),
             );
           } else {
             // Check for incomplete docs if required
@@ -182,8 +183,8 @@ export class MissingDocsLinter extends BaseLinter {
                   docIssue.code,
                   func.location,
                   docIssue.message,
-                  { suggestion: docIssue.suggestion }
-                )
+                  { suggestion: docIssue.suggestion },
+                ),
               );
             }
           }
@@ -214,8 +215,8 @@ export class MissingDocsLinter extends BaseLinter {
                     kind: type.kind,
                     fieldCount: type.fields.length,
                   },
-                }
-              )
+                },
+              ),
             );
           }
         }
@@ -254,7 +255,7 @@ export class MissingDocsLinter extends BaseLinter {
    */
   private shouldIgnoreFile(
     path: string,
-    opts: Required<MissingDocsOptions>
+    opts: Required<MissingDocsOptions>,
   ): boolean {
     return opts.ignoreFilePatterns.some((pattern) => pattern.test(path));
   }
@@ -264,7 +265,7 @@ export class MissingDocsLinter extends BaseLinter {
    */
   private shouldIgnoreFunction(
     name: string,
-    opts: Required<MissingDocsOptions>
+    opts: Required<MissingDocsOptions>,
   ): boolean {
     if (!name) return true; // Anonymous functions
     return opts.ignoreFunctionPatterns.some((pattern) => pattern.test(name));
@@ -275,7 +276,7 @@ export class MissingDocsLinter extends BaseLinter {
    */
   private shouldIgnoreType(
     name: string,
-    opts: Required<MissingDocsOptions>
+    opts: Required<MissingDocsOptions>,
   ): boolean {
     return opts.ignoreTypePatterns.some((pattern) => pattern.test(name));
   }
@@ -291,25 +292,29 @@ export class MissingDocsLinter extends BaseLinter {
    * Check if JSDoc is complete (has @param for all params, @returns if needed).
    */
   private checkDocCompleteness(
-    func: { 
-      name: string; 
-      jsDoc?: string; 
+    func: {
+      name: string;
+      jsDoc?: string;
       params: readonly { name: string }[];
       returnType?: string;
     },
-    opts: Required<MissingDocsOptions>
+    opts: Required<MissingDocsOptions>,
   ): Array<{ code: string; message: string; suggestion: string }> {
-    const issues: Array<{ code: string; message: string; suggestion: string }> = [];
+    const issues: Array<{ code: string; message: string; suggestion: string }> =
+      [];
     const jsDoc = func.jsDoc ?? "";
 
     // Check @param tags
     if (opts.requireParamDocs && func.params.length > 0) {
       for (const param of func.params) {
-        const paramPattern = new RegExp(`@param\\s+(?:\\{[^}]+\\}\\s+)?${param.name}\\b`);
+        const paramPattern = new RegExp(
+          `@param\\s+(?:\\{[^}]+\\}\\s+)?${param.name}\\b`,
+        );
         if (!paramPattern.test(jsDoc)) {
           issues.push({
             code: "missing-docs/missing-param-doc",
-            message: `Function "${func.name}" is missing @param documentation for "${param.name}".`,
+            message:
+              `Function "${func.name}" is missing @param documentation for "${param.name}".`,
             suggestion: `Add @param ${param.name} - description`,
           });
         }
@@ -318,11 +323,11 @@ export class MissingDocsLinter extends BaseLinter {
 
     // Check @returns tag
     if (opts.requireReturnsDocs) {
-      const hasReturn = func.returnType && 
-                       func.returnType !== "void" && 
-                       func.returnType !== "Promise<void>";
+      const hasReturn = func.returnType &&
+        func.returnType !== "void" &&
+        func.returnType !== "Promise<void>";
       const hasReturnsTag = /@returns?\b/.test(jsDoc);
-      
+
       if (hasReturn && !hasReturnsTag) {
         issues.push({
           code: "missing-docs/missing-returns-doc",

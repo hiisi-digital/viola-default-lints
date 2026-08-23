@@ -8,12 +8,12 @@ import type { LinterConfig } from "@hiisi/viola";
 import { assertEquals } from "@std/assert";
 import { DuplicateLogicLinter } from "./duplicate-logic.ts";
 import {
-    defaultConfig,
-    expectNoViolations,
-    first,
-    mockCodebase,
-    mockFile,
-    mockFunction,
+  defaultConfig,
+  expectNoViolations,
+  first,
+  mockCodebase,
+  mockFile,
+  mockFunction,
 } from "./test_utils.ts";
 
 const linter = new DuplicateLogicLinter();
@@ -28,25 +28,25 @@ Deno.test("duplicate-logic - no violations for unique function implementations",
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "createUser", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "createUser",
+            file: "src/app.ts",
             line: 1,
             body: `{
               const id = generateId();
               const timestamp = Date.now();
               return { id, timestamp, role: 'user' };
-            }`
+            }`,
           }),
-          mockFunction({ 
-            name: "deleteOrder", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "deleteOrder",
+            file: "src/app.ts",
             line: 10,
             body: `{
               validateOrderId(orderId);
               const order = db.orders.find(orderId);
               if (order) db.orders.delete(orderId);
-            }`
+            }`,
           }),
         ],
       }),
@@ -69,9 +69,9 @@ Deno.test("duplicate-logic - reports exact duplicate functions", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "processUserData", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "processUserData",
+            file: "src/app.ts",
             line: 1,
             body: identicalBody,
           }),
@@ -80,9 +80,9 @@ Deno.test("duplicate-logic - reports exact duplicate functions", () => {
       mockFile({
         path: "src/utils.ts",
         functions: [
-          mockFunction({ 
-            name: "processAdminData", 
-            file: "src/utils.ts", 
+          mockFunction({
+            name: "processAdminData",
+            file: "src/utils.ts",
             line: 1,
             body: identicalBody,
           }),
@@ -156,15 +156,15 @@ Deno.test("duplicate-logic - ignores functions with bodies too short", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "getX", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "getX",
+            file: "src/app.ts",
             line: 1,
             body: shortBody,
           }),
-          mockFunction({ 
-            name: "getY", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "getY",
+            file: "src/app.ts",
             line: 5,
             body: shortBody,
           }),
@@ -194,9 +194,9 @@ Deno.test("duplicate-logic - respects minBodyLength option", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "funcA", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "funcA",
+            file: "src/app.ts",
             line: 1,
             body: mediumBody,
           }),
@@ -205,9 +205,9 @@ Deno.test("duplicate-logic - respects minBodyLength option", () => {
       mockFile({
         path: "src/utils.ts",
         functions: [
-          mockFunction({ 
-            name: "funcB", 
-            file: "src/utils.ts", 
+          mockFunction({
+            name: "funcB",
+            file: "src/utils.ts",
             line: 1,
             body: mediumBody,
           }),
@@ -237,9 +237,9 @@ Deno.test("duplicate-logic - respects minBodyLines option", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "funcA", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "funcA",
+            file: "src/app.ts",
             line: 1,
             body: shortMultilineBody,
           }),
@@ -248,9 +248,9 @@ Deno.test("duplicate-logic - respects minBodyLines option", () => {
       mockFile({
         path: "src/utils.ts",
         functions: [
-          mockFunction({ 
-            name: "funcB", 
-            file: "src/utils.ts", 
+          mockFunction({
+            name: "funcB",
+            file: "src/utils.ts",
             line: 1,
             body: shortMultilineBody,
           }),
@@ -281,9 +281,9 @@ Deno.test("duplicate-logic - detects duplicates across different files", () => {
       mockFile({
         path: "src/module-a.ts",
         functions: [
-          mockFunction({ 
-            name: "handleA", 
-            file: "src/module-a.ts", 
+          mockFunction({
+            name: "handleA",
+            file: "src/module-a.ts",
             line: 1,
             body: duplicateBody,
           }),
@@ -292,9 +292,9 @@ Deno.test("duplicate-logic - detects duplicates across different files", () => {
       mockFile({
         path: "src/module-b.ts",
         functions: [
-          mockFunction({ 
-            name: "handleB", 
-            file: "src/module-b.ts", 
+          mockFunction({
+            name: "handleB",
+            file: "src/module-b.ts",
             line: 1,
             body: duplicateBody,
           }),
@@ -324,9 +324,9 @@ Deno.test("duplicate-logic - can disable cross-file comparison", () => {
       mockFile({
         path: "src/module-a.ts",
         functions: [
-          mockFunction({ 
-            name: "handleA", 
-            file: "src/module-a.ts", 
+          mockFunction({
+            name: "handleA",
+            file: "src/module-a.ts",
             line: 1,
             body: duplicateBody,
           }),
@@ -335,9 +335,9 @@ Deno.test("duplicate-logic - can disable cross-file comparison", () => {
       mockFile({
         path: "src/module-b.ts",
         functions: [
-          mockFunction({ 
-            name: "handleB", 
-            file: "src/module-b.ts", 
+          mockFunction({
+            name: "handleB",
+            file: "src/module-b.ts",
             line: 1,
             body: duplicateBody,
           }),
@@ -368,15 +368,15 @@ Deno.test("duplicate-logic - ignores test files by default", () => {
       mockFile({
         path: "src/app_test.ts",
         functions: [
-          mockFunction({ 
-            name: "testA", 
-            file: "src/app_test.ts", 
+          mockFunction({
+            name: "testA",
+            file: "src/app_test.ts",
             line: 1,
             body: duplicateBody,
           }),
-          mockFunction({ 
-            name: "testB", 
-            file: "src/app_test.ts", 
+          mockFunction({
+            name: "testB",
+            file: "src/app_test.ts",
             line: 10,
             body: duplicateBody,
           }),
@@ -402,15 +402,15 @@ Deno.test("duplicate-logic - ignores spec files by default", () => {
       mockFile({
         path: "src/app.spec.ts",
         functions: [
-          mockFunction({ 
-            name: "testA", 
-            file: "src/app.spec.ts", 
+          mockFunction({
+            name: "testA",
+            file: "src/app.spec.ts",
             line: 1,
             body: duplicateBody,
           }),
-          mockFunction({ 
-            name: "testB", 
-            file: "src/app.spec.ts", 
+          mockFunction({
+            name: "testB",
+            file: "src/app.spec.ts",
             line: 10,
             body: duplicateBody,
           }),
@@ -450,9 +450,9 @@ Deno.test("duplicate-logic - respects similarityThreshold option", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "funcA", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "funcA",
+            file: "src/app.ts",
             line: 1,
             body: slightlyDifferentBodyA,
           }),
@@ -461,9 +461,9 @@ Deno.test("duplicate-logic - respects similarityThreshold option", () => {
       mockFile({
         path: "src/utils.ts",
         functions: [
-          mockFunction({ 
-            name: "funcB", 
-            file: "src/utils.ts", 
+          mockFunction({
+            name: "funcB",
+            file: "src/utils.ts",
             line: 1,
             body: slightlyDifferentBodyB,
           }),
@@ -493,15 +493,15 @@ Deno.test("duplicate-logic - respects ignoreFunctions option", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "impactCond", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "impactCond",
+            file: "src/app.ts",
             line: 1,
             body: duplicateBody,
           }),
-          mockFunction({ 
-            name: "categoryCond", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "categoryCond",
+            file: "src/app.ts",
             line: 10,
             body: duplicateBody,
           }),
@@ -531,9 +531,24 @@ Deno.test("duplicate-logic - respects maxPairs option", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ name: "funcA", file: "src/app.ts", line: 1, body: duplicateBody }),
-          mockFunction({ name: "funcB", file: "src/app.ts", line: 10, body: duplicateBody }),
-          mockFunction({ name: "funcC", file: "src/app.ts", line: 20, body: duplicateBody }),
+          mockFunction({
+            name: "funcA",
+            file: "src/app.ts",
+            line: 1,
+            body: duplicateBody,
+          }),
+          mockFunction({
+            name: "funcB",
+            file: "src/app.ts",
+            line: 10,
+            body: duplicateBody,
+          }),
+          mockFunction({
+            name: "funcC",
+            file: "src/app.ts",
+            line: 20,
+            body: duplicateBody,
+          }),
         ],
       }),
     ],
@@ -561,9 +576,9 @@ Deno.test("duplicate-logic - errorOnExact option controls severity", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "funcA", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "funcA",
+            file: "src/app.ts",
             line: 1,
             body: duplicateBody,
           }),
@@ -572,9 +587,9 @@ Deno.test("duplicate-logic - errorOnExact option controls severity", () => {
       mockFile({
         path: "src/utils.ts",
         functions: [
-          mockFunction({ 
-            name: "funcB", 
-            file: "src/utils.ts", 
+          mockFunction({
+            name: "funcB",
+            file: "src/utils.ts",
             line: 1,
             body: duplicateBody,
           }),
@@ -617,15 +632,15 @@ Deno.test("duplicate-logic - single function produces no violations", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "onlyFunction", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "onlyFunction",
+            file: "src/app.ts",
             line: 1,
             body: `{
               const result = doSomething();
               const scaled = result * 2;
               return scaled;
-            }`
+            }`,
           }),
         ],
       }),
@@ -648,15 +663,15 @@ Deno.test("duplicate-logic - functions in same file with same body are detected"
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "funcA", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "funcA",
+            file: "src/app.ts",
             line: 1,
             body: duplicateBody,
           }),
-          mockFunction({ 
-            name: "funcB", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "funcB",
+            file: "src/app.ts",
             line: 10,
             body: duplicateBody,
           }),
@@ -724,9 +739,9 @@ Deno.test("duplicate-logic - violation includes related locations", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "funcA", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "funcA",
+            file: "src/app.ts",
             line: 1,
             body: duplicateBody,
           }),
@@ -735,9 +750,9 @@ Deno.test("duplicate-logic - violation includes related locations", () => {
       mockFile({
         path: "src/utils.ts",
         functions: [
-          mockFunction({ 
-            name: "funcB", 
-            file: "src/utils.ts", 
+          mockFunction({
+            name: "funcB",
+            file: "src/utils.ts",
             line: 1,
             body: duplicateBody,
           }),
@@ -764,9 +779,9 @@ Deno.test("duplicate-logic - violation includes suggestion", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ 
-            name: "funcA", 
-            file: "src/app.ts", 
+          mockFunction({
+            name: "funcA",
+            file: "src/app.ts",
             line: 1,
             body: duplicateBody,
           }),
@@ -775,9 +790,9 @@ Deno.test("duplicate-logic - violation includes suggestion", () => {
       mockFile({
         path: "src/utils.ts",
         functions: [
-          mockFunction({ 
-            name: "funcB", 
-            file: "src/utils.ts", 
+          mockFunction({
+            name: "funcB",
+            file: "src/utils.ts",
             line: 1,
             body: duplicateBody,
           }),

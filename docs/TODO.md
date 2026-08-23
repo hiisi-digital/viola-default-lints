@@ -8,17 +8,23 @@ The test suite has 29 failing tests due to two main issues:
 
 ### Issue 1: Issue `kind` Format Mismatch
 
-Tests expect short codes like `type-outside-types` but linters emit the full qualified format `linter-id/issue-code` (e.g., `type-location/type-outside-types`).
+Tests expect short codes like `type-outside-types` but linters emit the full
+qualified format `linter-id/issue-code` (e.g.,
+`type-location/type-outside-types`).
 
-**Root cause**: The `BaseLinter.issue()` method in viola core prefixes issue kinds with the linter ID:
+**Root cause**: The `BaseLinter.issue()` method in viola core prefixes issue
+kinds with the linter ID:
+
 ```typescript
-const kind = issueKind.includes("/") 
-  ? issueKind 
+const kind = issueKind.includes("/")
+  ? issueKind
   : `${this.meta.id}/${issueKind}`;
 ```
 
 **Fix required**: Update all tests to use full qualified issue codes:
-- [ ] `type-location_test.ts` - Change `type-outside-types` → `type-location/type-outside-types`
+
+- [ ] `type-location_test.ts` - Change `type-outside-types` →
+      `type-location/type-outside-types`
 - [ ] `similar-functions_test.ts` - Change codes to `similar-functions/...`
 - [ ] `similar-types_test.ts` - Change codes to `similar-types/...`
 - [ ] `duplicate-strings_test.ts` - Change codes to `duplicate-strings/...`
@@ -29,13 +35,18 @@ const kind = issueKind.includes("/")
 ### Issue 2: Linter Behavioral Mismatches
 
 Some test expectations don't match actual linter behavior:
-- [ ] `duplicate-strings` - Detection threshold/logic differs from test expectations
-- [ ] `orphaned-code` - Entry point handling (mod.ts, index.ts, main.ts) not working as expected
-- [ ] `schema-collision` - Case-insensitive and exact match options not behaving as tested
+
+- [ ] `duplicate-strings` - Detection threshold/logic differs from test
+      expectations
+- [ ] `orphaned-code` - Entry point handling (mod.ts, index.ts, main.ts) not
+      working as expected
+- [ ] `schema-collision` - Case-insensitive and exact match options not behaving
+      as tested
 - [ ] `similar-functions` - Similarity threshold calculations differ
 - [ ] `similar-types` - Name similarity and structure comparison differ
 
-**Fix approach**: 
+**Fix approach**:
+
 1. First update all issue codes to full qualified format
 2. Then run tests to see which behavioral tests still fail
 3. Investigate each linter to determine if test or linter is wrong
@@ -78,6 +89,7 @@ type-location - reports functions in types/ directory
 ## ✅ Phase 1: Core Linters (COMPLETED)
 
 ### Linter Implementations
+
 - [x] type-location - Types in types/ directories
 - [x] similar-functions - Detect similar function names
 - [x] similar-types - Detect similar type names
@@ -89,6 +101,7 @@ type-location - reports functions in types/ directory
 - [x] schema-collision - Find conflicting schemas
 
 ### Plugin Structure
+
 - [x] ViolaPlugin interface implementation
 - [x] Default rules by impact level
 - [x] Individual linter exports
@@ -97,11 +110,14 @@ type-location - reports functions in types/ directory
 ## 🚧 Phase 2: Testing (IN PROGRESS)
 
 ### Test Infrastructure Fixes
-- [ ] Update `expectCodes` helper OR update all tests to use full qualified issue codes
+
+- [ ] Update `expectCodes` helper OR update all tests to use full qualified
+      issue codes
 - [ ] Review test_utils.ts for any other assumptions about issue format
 - [ ] Ensure CodebaseData mock factories match current viola core types
 
 ### Existing Tests (NEED FIXES)
+
 - [ ] type-location_test.ts - Fix issue code format (5 failing)
 - [ ] similar-functions_test.ts - Fix issue code format + behavior (3 failing)
 - [ ] similar-types_test.ts - Fix issue code format + behavior (6 failing)
@@ -112,6 +128,7 @@ type-location - reports functions in types/ directory
 - [x] test_utils.ts (shared utilities)
 
 ### Missing Tests
+
 - [ ] similar-types_test.ts
   - [ ] Similar name detection
   - [ ] Duplicate type detection
@@ -149,6 +166,7 @@ type-location - reports functions in types/ directory
   - [ ] Schema pattern configuration
 
 ### Test Fixtures
+
 - [ ] Create comprehensive fixtures for each linter
 - [ ] Edge case examples
 - [ ] Configuration variant examples
@@ -156,46 +174,55 @@ type-location - reports functions in types/ directory
 ## 📋 Phase 3: Linter Enhancements
 
 ### type-location
+
 - [ ] Support for barrel files (index.ts re-exports)
 - [ ] Allow inline types option
 - [ ] Custom types directory patterns
 
 ### similar-functions
+
 - [ ] Body similarity comparison (not just names)
 - [ ] Cross-module duplicate detection
 - [ ] Suggestions for consolidation locations
 
 ### similar-types
+
 - [ ] Structural similarity comparison
 - [ ] Generic type handling
 - [ ] Intersection/union type analysis
 
 ### duplicate-strings
+
 - [ ] Template literal support
 - [ ] String concatenation detection
 - [ ] Automatic constant extraction suggestions
 
 ### duplicate-logic
+
 - [ ] AST-based comparison (not just text)
 - [ ] Parameterized duplicate detection
 - [ ] Refactoring suggestions
 
 ### deprecation-check
+
 - [ ] Support for @since tags
 - [ ] Migration path suggestions
 - [ ] Deprecation timeline visualization
 
 ### missing-docs
+
 - [ ] Documentation quality scoring
 - [ ] Auto-generate doc stubs
 - [ ] Link to related symbols
 
 ### orphaned-code
+
 - [ ] Dead code elimination suggestions
 - [ ] Usage graph visualization
 - [ ] Safe removal verification
 
 ### schema-collision
+
 - [ ] Schema versioning support
 - [ ] Migration detection
 - [ ] Breaking change analysis
@@ -203,27 +230,32 @@ type-location - reports functions in types/ directory
 ## 📋 Phase 4: New Linters (Future)
 
 ### complexity-check
+
 - [ ] Cyclomatic complexity
 - [ ] Cognitive complexity
 - [ ] Function length
 - [ ] Parameter count
 
 ### naming-conventions
+
 - [ ] Configurable naming patterns
 - [ ] File naming rules
 - [ ] Export naming consistency
 
 ### import-organization
+
 - [ ] Import grouping rules
 - [ ] Unused import detection
 - [ ] Circular dependency detection
 
 ### test-coverage
+
 - [ ] Untested exports
 - [ ] Test file organization
 - [ ] Test naming conventions
 
 ### security-patterns
+
 - [ ] Hardcoded secrets detection
 - [ ] Unsafe patterns
 - [ ] Injection vulnerabilities
@@ -248,6 +280,7 @@ type-location - reports functions in types/ directory
 ### Current State
 
 9 linters implemented with basic functionality. Main gaps:
+
 1. **Testing** - Only 3 of 9 linters have test files
 2. **Configuration docs** - Options not fully documented
 3. **Advanced features** - Most linters are MVP implementations
@@ -262,6 +295,7 @@ type-location - reports functions in types/ directory
 ### Dependencies
 
 Only these should be used:
+
 - `@hiisi/viola` - Core runtime and types
 - `@hiisi/flash-freeze` - Immutable data utilities
 - `@std/assert` - Testing

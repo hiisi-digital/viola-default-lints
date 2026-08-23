@@ -17,14 +17,14 @@
  */
 
 import {
-    BaseLinter,
-    type CodebaseData,
-    type Issue,
-    type IssueCatalog,
-    type LinterConfig,
-    type LinterDataRequirements,
-    type LinterMeta,
-    type SourceLocation,
+  BaseLinter,
+  type CodebaseData,
+  type Issue,
+  type IssueCatalog,
+  type LinterConfig,
+  type LinterDataRequirements,
+  type LinterMeta,
+  type SourceLocation,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -54,19 +54,19 @@ const DEPRECATION_PATTERNS = [
  * Patterns that indicate false positives (talking ABOUT deprecation, not actual deprecation).
  */
 const FALSE_POSITIVE_PATTERNS = [
-  /has\s+any\s+@?deprecated/i,       // "has any @deprecated" - describing a field
-  /check.*deprecat/i,                // "check for deprecation"
-  /detect.*deprecat/i,               // "detect deprecation"
-  /find.*deprecat/i,                 // "find deprecation"
-  /deprecation.?pattern/i,           // "deprecation pattern"
-  /deprecation.?check/i,             // "deprecation check"
-  /deprecation.?linter/i,            // "deprecation linter"
-  /deprecation.?mention/i,           // "deprecation mention"
-  /deprecation.?marker/i,            // "deprecation marker"
-  /deprecation.?warning/i,           // "deprecation warning" (meta)
-  /handle.?deprecat/i,               // "handle deprecation"
-  /FALSE_POSITIVE/,                  // This file's own constant
-  /DEPRECATION_PATTERNS/,            // This file's own constant
+  /has\s+any\s+@?deprecated/i, // "has any @deprecated" - describing a field
+  /check.*deprecat/i, // "check for deprecation"
+  /detect.*deprecat/i, // "detect deprecation"
+  /find.*deprecat/i, // "find deprecation"
+  /deprecation.?pattern/i, // "deprecation pattern"
+  /deprecation.?check/i, // "deprecation check"
+  /deprecation.?linter/i, // "deprecation linter"
+  /deprecation.?mention/i, // "deprecation mention"
+  /deprecation.?marker/i, // "deprecation marker"
+  /deprecation.?warning/i, // "deprecation warning" (meta)
+  /handle.?deprecat/i, // "handle deprecation"
+  /FALSE_POSITIVE/, // This file's own constant
+  /DEPRECATION_PATTERNS/, // This file's own constant
 ];
 
 /**
@@ -76,8 +76,8 @@ const EXCLUDED_FILE_PATTERNS = [
   /CHANGELOG/i,
   /HISTORY/i,
   /MIGRATION/i,
-  /\.md$/,                           // Documentation often legitimately discusses deprecation
-  /deprecation-check\.ts$/,          // This linter itself
+  /\.md$/, // Documentation often legitimately discusses deprecation
+  /deprecation-check\.ts$/, // This linter itself
 ];
 
 /**
@@ -100,7 +100,7 @@ export interface DeprecationCheckOptions {
  * Default options.
  */
 const DEFAULT_OPTIONS: DeprecationCheckOptions = {
-  checkLegacy: false,      // Too noisy by default
+  checkLegacy: false, // Too noisy by default
   checkObsolete: true,
   checkRemovalMarkers: true,
   excludeFiles: [],
@@ -125,7 +125,10 @@ function getOptions(config: LinterConfig): DeprecationCheckOptions {
 /**
  * Check if a file should be excluded.
  */
-function shouldExcludeFile(filePath: string, options: DeprecationCheckOptions): boolean {
+function shouldExcludeFile(
+  filePath: string,
+  options: DeprecationCheckOptions,
+): boolean {
   // Check built-in exclusions
   if (EXCLUDED_FILE_PATTERNS.some((p) => p.test(filePath))) {
     return true;
@@ -138,7 +141,10 @@ function shouldExcludeFile(filePath: string, options: DeprecationCheckOptions): 
 /**
  * Check if a match is a false positive.
  */
-function isFalsePositive(line: string, options: DeprecationCheckOptions): boolean {
+function isFalsePositive(
+  line: string,
+  options: DeprecationCheckOptions,
+): boolean {
   // Check built-in false positive patterns
   if (FALSE_POSITIVE_PATTERNS.some((p) => p.test(line))) {
     return true;
@@ -151,7 +157,10 @@ function isFalsePositive(line: string, options: DeprecationCheckOptions): boolea
 /**
  * Determine if a deprecation type should be checked based on options.
  */
-function shouldCheckType(type: string, options: DeprecationCheckOptions): boolean {
+function shouldCheckType(
+  type: string,
+  options: DeprecationCheckOptions,
+): boolean {
   switch (type) {
     case "legacy":
       return options.checkLegacy ?? false;
@@ -204,7 +213,7 @@ interface DeprecationMatch {
 function extractDeprecations(
   content: string,
   filePath: string,
-  options: DeprecationCheckOptions
+  options: DeprecationCheckOptions,
 ): DeprecationMatch[] {
   const deprecations: DeprecationMatch[] = [];
   const lines = content.split("\n");
@@ -262,12 +271,14 @@ export class DeprecationCheckLinter extends BaseLinter {
     "deprecation-check/deprecated-annotation": {
       category: "maintainability",
       impact: "major",
-      description: "Found @deprecated annotation - deprecated code should be deleted, not marked",
+      description:
+        "Found @deprecated annotation - deprecated code should be deleted, not marked",
     },
     "deprecation-check/deprecated-marker": {
       category: "maintainability",
       impact: "major",
-      description: "Found DEPRECATED marker - deprecated code should be deleted, not marked",
+      description:
+        "Found DEPRECATED marker - deprecated code should be deleted, not marked",
     },
     "deprecation-check/deprecated-mention": {
       category: "maintainability",
@@ -277,12 +288,14 @@ export class DeprecationCheckLinter extends BaseLinter {
     "deprecation-check/deprecated-legacy": {
       category: "maintainability",
       impact: "minor",
-      description: "Found legacy code reference that may indicate deprecated code",
+      description:
+        "Found legacy code reference that may indicate deprecated code",
     },
     "deprecation-check/deprecated-removal": {
       category: "maintainability",
       impact: "major",
-      description: "Found code marked for removal - should be deleted immediately",
+      description:
+        "Found code marked for removal - should be deleted immediately",
     },
     "deprecation-check/deprecated-obsolete": {
       category: "maintainability",
@@ -341,8 +354,7 @@ export class DeprecationCheckLinter extends BaseLinter {
       `Found ${typeLabel} in ${match.location.file}:${match.location.line}. ` +
         `Deprecated code should be DELETED, not marked.`,
       {
-        suggestion:
-          `IMMEDIATE ACTION REQUIRED:\n` +
+        suggestion: `IMMEDIATE ACTION REQUIRED:\n` +
           `This is a PRE-RELEASE project. There are NO users depending on this code.\n\n` +
           `DO NOT:\n` +
           `  - Keep deprecated code "just in case"\n` +
@@ -360,7 +372,7 @@ export class DeprecationCheckLinter extends BaseLinter {
           typeLabel,
           sourceLine: match.line,
         },
-      }
+      },
     );
   }
 }
@@ -368,4 +380,5 @@ export class DeprecationCheckLinter extends BaseLinter {
 /**
  * Default instance for registration.
  */
-export const deprecationCheckLinter: DeprecationCheckLinter = new DeprecationCheckLinter();
+export const deprecationCheckLinter: DeprecationCheckLinter =
+  new DeprecationCheckLinter();
