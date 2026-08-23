@@ -101,14 +101,16 @@ Deno.test("duplicate-logic - reports similar implementations", () => {
     const user = database.users.findOne(userId);
     if (!user) throw new Error('User not found');
     const validated = validate(user);
-    return transform(validated);
+    const scaled = validated * 2;
+    return transform(scaled);
   }`;
 
   const bodyB = `{
     const admin = database.admins.findOne(adminId);
     if (!admin) throw new Error('Admin not found');
     const validated = validate(admin);
-    return transform(validated);
+    const scaled = validated * 2;
+    return transform(scaled);
   }`;
 
   const data = mockCodebase({
@@ -183,7 +185,8 @@ Deno.test("duplicate-logic - respects minBodyLength option", () => {
 
   const mediumBody = `{
     const result = doSomething();
-    return result;
+    const scaled = result * 2;
+    return scaled;
   }`;
 
   const data = mockCodebase({
@@ -356,7 +359,8 @@ Deno.test("duplicate-logic - ignores test files by default", () => {
   const duplicateBody = `{
     const result = calculateSomething();
     expect(result).toBe(expected);
-    return result;
+    const scaled = result * 2;
+    return scaled;
   }`;
 
   const data = mockCodebase({
@@ -389,7 +393,8 @@ Deno.test("duplicate-logic - ignores spec files by default", () => {
   const duplicateBody = `{
     const result = calculateSomething();
     expect(result).toBe(expected);
-    return result;
+    const scaled = result * 2;
+    return scaled;
   }`;
 
   const data = mockCodebase({
@@ -517,7 +522,8 @@ Deno.test("duplicate-logic - respects maxPairs option", () => {
 
   const duplicateBody = `{
     const value = calculate();
-    return transform(value);
+    const scaled = value * 2;
+    return transform(scaled);
   }`;
 
   const data = mockCodebase({
@@ -546,7 +552,8 @@ Deno.test("duplicate-logic - errorOnExact option controls severity", () => {
 
   const duplicateBody = `{
     const result = doSomething();
-    return result;
+    const scaled = result * 2;
+    return scaled;
   }`;
 
   const data = mockCodebase({
@@ -616,7 +623,8 @@ Deno.test("duplicate-logic - single function produces no violations", () => {
             line: 1,
             body: `{
               const result = doSomething();
-              return result;
+              const scaled = result * 2;
+              return scaled;
             }`
           }),
         ],
@@ -668,7 +676,8 @@ Deno.test("duplicate-logic - functions in same file with same body are detected"
 Deno.test("duplicate-logic - violation has correct linter name", () => {
   const duplicateBody = `{
     const result = process(data);
-    return result;
+    const scaled = result * 2;
+    return scaled;
   }`;
 
   const data = mockCodebase({
@@ -706,7 +715,8 @@ Deno.test("duplicate-logic - violation has correct linter name", () => {
 Deno.test("duplicate-logic - violation includes related locations", () => {
   const duplicateBody = `{
     const result = process(data);
-    return result;
+    const scaled = result * 2;
+    return scaled;
   }`;
 
   const data = mockCodebase({
@@ -745,7 +755,8 @@ Deno.test("duplicate-logic - violation includes related locations", () => {
 Deno.test("duplicate-logic - violation includes suggestion", () => {
   const duplicateBody = `{
     const result = process(data);
-    return result;
+    const scaled = result * 2;
+    return scaled;
   }`;
 
   const data = mockCodebase({

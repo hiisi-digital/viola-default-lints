@@ -82,7 +82,10 @@ const DEFAULT_OPTIONS: SimilarFunctionsOptions = {
     /^is[A-Z]/,     // Boolean checks
     /^has[A-Z]/,    // Boolean checks
   ],
-  ignoreFunctions: [],
+  // `constructor` is not a function name anybody chose, and constructors are
+  // supposed to differ between classes. Reporting that one "exists in multiple
+  // files with DIFFERENT signatures" describes what a constructor is.
+  ignoreFunctions: ["constructor"],
 };
 
 // =============================================================================

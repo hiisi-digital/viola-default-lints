@@ -275,8 +275,18 @@ export class DuplicateLogicLinter extends BaseLinter {
       return false;
     }
 
-    // Skip functions with too few lines
-    const lineCount = func.body.split("\n").length;
+    // Skip functions with too few lines.
+    //
+    // Counted over lines that carry code. `func.body` includes the braces, so
+    // splitting it raw made a one-line body count as three, and a floor of
+    // three excluded nothing at all. Every `some`/`every` pair of delegating
+    // one-liners was reported as 97% duplicate logic, where consolidating them
+    // would mean a mode flag and be strictly worse than the two names.
+    const lineCount = func.body
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line !== "" && line !== "{" && line !== "}")
+      .length;
     if (lineCount < opts.minBodyLines) {
       return false;
     }
