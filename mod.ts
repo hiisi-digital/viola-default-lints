@@ -42,6 +42,7 @@ export {
   DeprecationCheckLinter,
   deprecationCheckLinter,
   type DeprecationCheckOptions,
+  type DeprecationKind,
 } from "./src/deprecation-check.ts";
 
 export {
@@ -76,7 +77,11 @@ export {
   type SimilarTypesOptions,
 } from "./src/similar-types.ts";
 
-export { TypeLocationLinter, typeLocationLinter } from "./src/type-location.ts";
+export {
+  TypeLocationLinter,
+  typeLocationLinter,
+  type TypeLocationOptions,
+} from "./src/type-location.ts";
 
 // =============================================================================
 // Plugin Implementation

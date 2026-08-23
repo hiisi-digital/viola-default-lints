@@ -810,3 +810,75 @@ Deno.test("orphaned-code - violation includes suggestion", () => {
   assertEquals(typeof first(violations).suggestion, "string");
   assertEquals(first(violations).suggestion!.length > 0, true);
 });
+
+// =============================================================================
+// Which file an import resolves to
+// =============================================================================
+
+/**
+ * A project holding both `src/types.ts` and `src/types/mod.ts`.
+ *
+ * `order` decides which the crawler reports first, and that is the whole
+ * point: the old resolver returned whichever it reached first, so the defect
+ * only shows when the directory comes first. A test written the other way
+ * round passes against the bug.
+ */
+function bothShapes(order: "file first" | "directory first") {
+  const file = mockFile({
+    path: "src/types.ts",
+    exports: [mockExport({ name: "Thing", kind: "type" })],
+  });
+  const directory = mockFile({
+    path: "src/types/mod.ts",
+    exports: [mockExport({ name: "Other", kind: "type" })],
+  });
+  const user = mockFile({
+    path: "src/user.ts",
+    imports: [mockImport({ name: "Thing", from: "./types.ts" })],
+  });
+  return mockCodebase({
+    files: order === "file first"
+      ? [file, directory, user]
+      : [directory, file, user],
+  });
+}
+
+Deno.test("orphaned-code - a file beats a directory of the same name", () => {
+  // A project with both `types.ts` and `types/mod.ts` is ordinary, and
+  // `./types.ts` means the file. The three candidate forms used to be tried
+  // together inside one pass over the files, so whichever the crawler reached
+  // first won: viola resolved `./types.ts` to `types/mod`, every import of it
+  // missed, and the whole of `types.ts` reported as dead code.
+  for (const order of ["file first", "directory first"] as const) {
+    const violations = linter.lint(bothShapes(order), defaultConfig);
+    assertEquals(
+      violations.some((v) => v.message.includes('"Thing"')),
+      false,
+      `the import names the file, so its export is used (${order})`,
+    );
+  }
+});
+
+Deno.test("orphaned-code - a directory import still resolves to its mod", () => {
+  // The control. Fixing the precedence must not stop a directory import
+  // finding the module inside it.
+  const data = mockCodebase({
+    files: [
+      mockFile({
+        path: "src/types/mod.ts",
+        exports: [mockExport({ name: "Other", kind: "type" })],
+      }),
+      mockFile({
+        path: "src/user.ts",
+        imports: [mockImport({ name: "Other", from: "./types" })],
+      }),
+    ],
+  });
+
+  const violations = linter.lint(data, defaultConfig);
+  assertEquals(
+    violations.some((v) => v.message.includes('"Other"')),
+    false,
+    "no file is named `types`, so the directory's mod answers",
+  );
+});

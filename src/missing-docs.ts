@@ -16,6 +16,7 @@ import {
   type LinterDataRequirements,
   type LinterMeta,
 } from "@hiisi/viola";
+import { optionsAppending } from "./options.ts";
 
 // =============================================================================
 // Configuration
@@ -74,6 +75,9 @@ interface MissingDocsOptions {
    */
   requireReturnsDocs?: boolean;
 }
+
+/** The return type of a function that returns nothing worth documenting. */
+const NO_RETURN = "void";
 
 const DEFAULT_OPTIONS: Required<MissingDocsOptions> = {
   requireFunctionDocs: true,
@@ -135,7 +139,11 @@ export class MissingDocsLinter extends BaseLinter {
 
   lint(data: CodebaseData, config: LinterConfig): Issue[] {
     const issues: Issue[] = [];
-    const opts = this.getOptions(config);
+    const opts = optionsAppending<Required<MissingDocsOptions>>(
+      config,
+      DEFAULT_OPTIONS,
+      ["ignoreFunctionPatterns", "ignoreTypePatterns", "ignoreFilePatterns"],
+    );
 
     for (const file of data.files) {
       // Skip ignored files
@@ -169,7 +177,7 @@ export class MissingDocsLinter extends BaseLinter {
                   context: {
                     functionName: func.name,
                     paramCount: func.params.length,
-                    hasReturn: func.returnType && func.returnType !== "void",
+                    hasReturn: func.returnType && func.returnType !== NO_RETURN,
                   },
                 },
               ),
@@ -224,30 +232,6 @@ export class MissingDocsLinter extends BaseLinter {
     }
 
     return issues;
-  }
-
-  /**
-   * Get options with defaults applied.
-   */
-  private getOptions(config: LinterConfig): Required<MissingDocsOptions> {
-    const userOpts = (config.options ?? {}) as MissingDocsOptions;
-    return {
-      ...DEFAULT_OPTIONS,
-      ...userOpts,
-      // Merge arrays rather than replace
-      ignoreFunctionPatterns: [
-        ...DEFAULT_OPTIONS.ignoreFunctionPatterns,
-        ...(userOpts.ignoreFunctionPatterns ?? []),
-      ],
-      ignoreTypePatterns: [
-        ...DEFAULT_OPTIONS.ignoreTypePatterns,
-        ...(userOpts.ignoreTypePatterns ?? []),
-      ],
-      ignoreFilePatterns: [
-        ...DEFAULT_OPTIONS.ignoreFilePatterns,
-        ...(userOpts.ignoreFilePatterns ?? []),
-      ],
-    };
   }
 
   /**
@@ -324,7 +308,7 @@ export class MissingDocsLinter extends BaseLinter {
     // Check @returns tag
     if (opts.requireReturnsDocs) {
       const hasReturn = func.returnType &&
-        func.returnType !== "void" &&
+        func.returnType !== NO_RETURN &&
         func.returnType !== "Promise<void>";
       const hasReturnsTag = /@returns?\b/.test(jsDoc);
 

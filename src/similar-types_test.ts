@@ -924,3 +924,62 @@ Deno.test("similar-types - violation has correct linter name", () => {
   const violations = linter.lint(data, config);
   assertEquals(violations.length, 1);
 });
+
+// =============================================================================
+// Arms of one tagged union
+// =============================================================================
+
+/** Two arms of one union, plus two types that merely look alike. */
+function arms(discriminated: boolean) {
+  const tag = (value: string) =>
+    discriminated
+      ? [mockField("type", `"${value}"`)]
+      : [mockField("type", "string")];
+  return mockCodebase({
+    files: [
+      mockFile({
+        path: "src/conditions.ts",
+        types: [
+          mockType({
+            name: "ImpactCondition",
+            fields: [
+              ...tag("impact"),
+              mockField("comparison", "ComparisonData"),
+              mockField("negated", "boolean"),
+            ],
+          }),
+          mockType({
+            name: "FileGlobRule",
+            fields: [
+              ...tag("category"),
+              mockField("comparison", "ComparisonData"),
+              mockField("negated", "boolean"),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+}
+
+Deno.test("similar-types - arms of one tagged union are alike on purpose", () => {
+  // A tagged union is the same shape plus a field naming which arm it is.
+  // Reporting the arms as duplicates asks for the discriminant to go, which is
+  // asking for the union to stop working.
+  expectNoViolations(linter.lint(arms(true), defaultConfig));
+});
+
+Deno.test("similar-types - two types that merely look alike are still reported", () => {
+  // The control. Without a literal-typed discriminant these are two types with
+  // the same fields and no reason to be, which is the finding this linter is
+  // for.
+  assertEquals(linter.lint(arms(false), defaultConfig).length > 0, true);
+});
+
+Deno.test("similar-types - the union exemption can be turned off", () => {
+  const violations = linter.lint(arms(true), {
+    enabled: true,
+    options: { ignoreTaggedUnionArms: false },
+  });
+  assertEquals(violations.length > 0, true);
+});

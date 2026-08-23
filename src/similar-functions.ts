@@ -21,6 +21,7 @@ import {
   type LinterMeta,
   type SimilarityThresholds,
 } from "@hiisi/viola";
+import { isIgnored, locationString, optionsFrom } from "./options.ts";
 
 // =============================================================================
 // Configuration
@@ -39,6 +40,18 @@ const _FUNCTION_NAME_THRESHOLDS: SimilarityThresholds = {
  * Options for the similar functions linter.
  */
 export interface SimilarFunctionsOptions {
+  /**
+   * Compare methods against each other and against free functions.
+   *
+   * Off by default. A method's name is scoped by the type it hangs off, so
+   * `get`, `has`, `size` and `build` recurring across unrelated classes are
+   * the conventional names for those operations rather than duplication. Turn
+   * it on for a codebase where methods genuinely should not repeat.
+   *
+   * @default false
+   */
+  compareMethods?: boolean;
+
   /** Minimum similarity score to report (0-1) */
   minSimilarity?: number;
   /** Threshold for warning level */
@@ -68,11 +81,12 @@ export interface SimilarFunctionsOptions {
 /**
  * Default options.
  */
-const DEFAULT_OPTIONS: SimilarFunctionsOptions = {
+const DEFAULT_OPTIONS: Required<SimilarFunctionsOptions> = {
   minSimilarity: 0.7,
   warningThreshold: 0.7,
   errorThreshold: 0.85,
   minFunctionLines: 3,
+  compareMethods: false,
   minNameLength: 3,
   ignorePatterns: [
     /^handle[A-Z]/, // Event handlers are expected to be similar
@@ -95,26 +109,10 @@ const DEFAULT_OPTIONS: SimilarFunctionsOptions = {
 /**
  * Get options from linter config.
  */
-function getOptions(config: LinterConfig): SimilarFunctionsOptions {
-  const opts = config.options as Partial<SimilarFunctionsOptions> | undefined;
-  return {
-    ...DEFAULT_OPTIONS,
-    ...opts,
-  };
-}
 
 /**
  * Check if a function should be ignored based on name patterns.
  */
-function shouldIgnore(
-  name: string,
-  patterns: RegExp[],
-  explicitNames: string[],
-): boolean {
-  if (explicitNames.includes(name)) return true;
-  return patterns.some((pattern) => pattern.test(name));
-}
-
 /**
  * Compare parameter lists for similarity.
  * Returns 1 if identical, 0 if completely different.
@@ -164,10 +162,6 @@ function formatSignature(func: FunctionInfo): string {
 /**
  * Get a readable location string.
  */
-function locationString(func: FunctionInfo): string {
-  return `${func.location.file}:${func.location.line}`;
-}
-
 // =============================================================================
 // Similar Functions Linter
 // =============================================================================
@@ -216,19 +210,32 @@ export class SimilarFunctionsLinter extends BaseLinter {
 
   lint(data: CodebaseData, config: LinterConfig): Issue[] {
     const issues: Issue[] = [];
-    const options = getOptions(config);
+    const options = optionsFrom<Required<SimilarFunctionsOptions>>(
+      config,
+      DEFAULT_OPTIONS,
+    );
 
     // Filter functions to check
     const functions = data.allFunctions.filter((func) => {
       // Must have a name
       if (!func.name) return false;
 
+      // A method is named for what it does to its own type. `get` on a
+      // registry is not `get` on a cache, and `build` on eight builders is
+      // the builder pattern rather than eight copies of one function. Only a
+      // free function is duplicated by being named the same somewhere else.
+      if (
+        (options.compareMethods ?? false) === false && func.kind === "method"
+      ) {
+        return false;
+      }
+
       // Must meet minimum name length
       if (func.name.length < (options.minNameLength ?? 3)) return false;
 
       // Must not match ignore patterns or explicit ignore list
       if (
-        shouldIgnore(
+        isIgnored(
           func.name,
           options.ignorePatterns ?? [],
           options.ignoreFunctions ?? [],

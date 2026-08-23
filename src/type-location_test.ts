@@ -15,9 +15,23 @@ import {
   mockFunction,
   mockType,
 } from "./test_utils.ts";
+import type { LinterConfig } from "@hiisi/viola";
 import { TypeLocationLinter } from "./type-location.ts";
 
 const linter = new TypeLocationLinter();
+
+/**
+ * A project that keeps a types-only package, and says so.
+ *
+ * Every assertion about types being in the wrong place needs this, because a
+ * project that has not declared one has not agreed to keep one. The package
+ * name used to be hardcoded in the linter, so these tests passed without ever
+ * stating the convention they were testing.
+ */
+const declaresTypesPackage: LinterConfig = {
+  enabled: true,
+  options: { typesOnlyPackages: ["packages/types"] },
+};
 
 // =============================================================================
 // Basic Functionality
@@ -36,7 +50,7 @@ Deno.test("type-location - no violations for types in types/ directory", () => {
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   expectNoViolations(violations);
 });
 
@@ -52,7 +66,7 @@ Deno.test("type-location - no violations for types in local types/ subdirectory"
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   expectNoViolations(violations);
 });
 
@@ -68,7 +82,7 @@ Deno.test("type-location - no violations for types in .types.ts files", () => {
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   expectNoViolations(violations);
 });
 
@@ -90,7 +104,7 @@ Deno.test("type-location - reports non-exported types outside types dir too", ()
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   assertEquals(violations.length, 1);
   expectCodes(violations, ["type-location/type-outside-types"]);
 });
@@ -115,7 +129,7 @@ Deno.test("type-location - reports types outside types directories", () => {
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   assertEquals(violations.length, 1);
   expectCodes(violations, ["type-location/type-outside-types"]);
 });
@@ -143,7 +157,7 @@ Deno.test("type-location - reports multiple types in wrong location", () => {
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   assertEquals(violations.length, 2);
   expectCodes(violations, [
     "type-location/type-outside-types",
@@ -168,7 +182,7 @@ Deno.test("type-location - reports interface outside types directory", () => {
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   assertEquals(violations.length, 1);
   assertEquals(first(violations).kind, "type-location/type-outside-types");
 });
@@ -196,7 +210,7 @@ Deno.test("type-location - reports functions in types/ directory", () => {
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   assertEquals(violations.length, 1);
   expectCodes(violations, ["type-location/logic-in-types"]);
 });
@@ -214,7 +228,7 @@ Deno.test("type-location - no violation for functions in *.guards.ts file", () =
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   expectNoViolations(violations);
 });
 
@@ -231,7 +245,7 @@ Deno.test("type-location - no violation for functions in *.validators.ts file", 
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   expectNoViolations(violations);
 });
 
@@ -257,7 +271,7 @@ Deno.test("type-location - types in test files are still flagged (linter doesnt 
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   // The linter will still flag this - it doesn't have test file exclusions
   assertEquals(violations.length, 1);
 });
@@ -274,7 +288,7 @@ Deno.test("type-location - types in .types.ts files are allowed", () => {
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   expectNoViolations(violations);
 });
 
@@ -290,7 +304,7 @@ Deno.test("type-location - types in types.ts files are allowed", () => {
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   expectNoViolations(violations);
 });
 
@@ -326,14 +340,14 @@ Deno.test("type-location - handles mixed valid and invalid locations", () => {
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   assertEquals(violations.length, 1);
   assertEquals(first(violations).message.includes("BadConfig"), true);
 });
 
 Deno.test("type-location - empty codebase produces no violations", () => {
   const data = mockCodebase({ files: [] });
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   expectNoViolations(violations);
 });
 
@@ -350,33 +364,13 @@ Deno.test("type-location - files with no types produce no violations", () => {
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   expectNoViolations(violations);
 });
 
 // =============================================================================
 // Violation Properties
 // =============================================================================
-
-Deno.test("type-location - violation has correct severity", () => {
-  const data = mockCodebase({
-    files: [
-      mockFile({
-        path: "packages/core/bad.ts",
-        types: [
-          mockType({
-            name: "BadType",
-            isExported: true,
-            file: "packages/core/bad.ts",
-          }),
-        ],
-      }),
-    ],
-  });
-
-  const violations = linter.lint(data, defaultConfig);
-  assertEquals(violations.length, 1);
-});
 
 Deno.test("type-location - violation includes suggestion", () => {
   const data = mockCodebase({
@@ -394,28 +388,82 @@ Deno.test("type-location - violation includes suggestion", () => {
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  const violations = linter.lint(data, declaresTypesPackage);
   assertEquals(violations.length, 1);
   assertEquals(typeof first(violations).suggestion, "string");
   assertEquals(first(violations).suggestion!.length > 0, true);
 });
 
-Deno.test("type-location - violation has correct linter name", () => {
+// =============================================================================
+// What a project has not declared
+// =============================================================================
+
+Deno.test("type-location - a project that declares no types package is not in breach of having one", () => {
+  // The load-bearing default. This linter used to hold `packages/types` and
+  // two literal file paths from one particular monorepo, take its config as
+  // `_config`, and never read it. Every other project therefore had its whole
+  // type surface reported for breaking a convention it had never agreed to.
   const data = mockCodebase({
     files: [
       mockFile({
-        path: "packages/core/bad.ts",
-        types: [
-          mockType({
-            name: "BadType",
-            isExported: true,
-            file: "packages/core/bad.ts",
-          }),
-        ],
+        path: "src/grammars/resolver.ts",
+        types: [mockType({ name: "GrammarRole", isExported: true })],
       }),
     ],
   });
 
-  const violations = linter.lint(data, defaultConfig);
+  expectNoViolations(linter.lint(data, defaultConfig));
+});
+
+Deno.test("type-location - declaring a package is what turns the rule on", () => {
+  // The control for the law above. If this passed too, the default would not
+  // be a default, it would be the linter having stopped working.
+  const data = mockCodebase({
+    files: [
+      mockFile({
+        path: "src/grammars/resolver.ts",
+        types: [mockType({ name: "GrammarRole", isExported: true })],
+      }),
+    ],
+  });
+
+  const violations = linter.lint(data, declaresTypesPackage);
   assertEquals(violations.length, 1);
+  expectCodes(violations, ["type-location/type-outside-types"]);
+});
+
+Deno.test("type-location - a declared package still has its logic guarded", () => {
+  // The half of this linter that is not a filing convention: a package that
+  // says it holds types and nothing else must not hold logic.
+  const data = mockCodebase({
+    files: [
+      mockFile({
+        path: "packages/types/models.ts",
+        functions: [mockFunction({ name: "build", isExported: true })],
+      }),
+    ],
+  });
+
+  const violations = linter.lint(data, declaresTypesPackage);
+  assertEquals(violations.length, 1);
+  expectCodes(violations, ["type-location/logic-in-types"]);
+});
+
+Deno.test("type-location - the allowed-files list is the project's, not the linter's", () => {
+  const data = mockCodebase({
+    files: [
+      mockFile({
+        path: "src/wire/schema.ts",
+        types: [mockType({ name: "Wire", isExported: true })],
+      }),
+    ],
+  });
+
+  expectNoViolations(linter.lint(data, {
+    enabled: true,
+    options: {
+      typesOnlyPackages: ["packages/types"],
+      allowedTypeFiles: ["src/wire/schema.ts"],
+    },
+  }));
 });

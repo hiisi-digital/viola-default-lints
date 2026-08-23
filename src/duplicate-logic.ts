@@ -23,6 +23,7 @@ import {
   type SimilarityLevel,
   type SourceLocation,
 } from "@hiisi/viola";
+import { optionsAppending } from "./options.ts";
 
 // =============================================================================
 // Configuration
@@ -100,6 +101,9 @@ interface DuplicateLogicOptions {
   errorOnExact?: boolean;
 }
 
+/** What a function with no name is called in a report. */
+const ANONYMOUS = "(anonymous)";
+
 const DEFAULT_OPTIONS: Required<DuplicateLogicOptions> = {
   similarityThreshold: 0.85,
   minBodyLength: 50,
@@ -175,7 +179,11 @@ export class DuplicateLogicLinter extends BaseLinter {
 
   lint(data: CodebaseData, config: LinterConfig): Issue[] {
     const issues: Issue[] = [];
-    const opts = this.getOptions(config);
+    const opts = optionsAppending<Required<DuplicateLogicOptions>>(
+      config,
+      DEFAULT_OPTIONS,
+      ["ignoreFunctionPatterns", "ignoreFunctions", "ignoreFilePatterns"],
+    );
 
     // Collect and prepare functions for comparison
     const functions = this.prepareFunctions(data, opts);
@@ -194,29 +202,6 @@ export class DuplicateLogicLinter extends BaseLinter {
     }
 
     return issues;
-  }
-
-  /**
-   * Get options with defaults applied.
-   */
-  private getOptions(config: LinterConfig): Required<DuplicateLogicOptions> {
-    const userOpts = (config.options ?? {}) as DuplicateLogicOptions;
-    return {
-      ...DEFAULT_OPTIONS,
-      ...userOpts,
-      ignoreFunctionPatterns: [
-        ...DEFAULT_OPTIONS.ignoreFunctionPatterns,
-        ...(userOpts.ignoreFunctionPatterns ?? []),
-      ],
-      ignoreFunctions: [
-        ...DEFAULT_OPTIONS.ignoreFunctions,
-        ...(userOpts.ignoreFunctions ?? []),
-      ],
-      ignoreFilePatterns: [
-        ...DEFAULT_OPTIONS.ignoreFilePatterns,
-        ...(userOpts.ignoreFilePatterns ?? []),
-      ],
-    };
   }
 
   /**
@@ -438,8 +423,8 @@ export class DuplicateLogicLinter extends BaseLinter {
     const { func1, func2, similarity, isExact } = pair;
     const similarityPct = Math.round(similarity * 100);
 
-    const name1 = func1.name || "(anonymous)";
-    const name2 = func2.name || "(anonymous)";
+    const name1 = func1.name || ANONYMOUS;
+    const name2 = func2.name || ANONYMOUS;
 
     const relatedLocations: SourceLocation[] = [func2.location];
 

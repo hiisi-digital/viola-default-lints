@@ -6,6 +6,7 @@
  * @module
  */
 
+import { matchesGlob } from "@hiisi/viola/utils";
 import {
   BaseLinter,
   type CodebaseData,
@@ -16,6 +17,7 @@ import {
   type LinterMeta,
   type StringLiteral,
 } from "@hiisi/viola";
+import { isIgnored, locationString, optionsFrom } from "./options.ts";
 
 // =============================================================================
 // Configuration
@@ -48,6 +50,73 @@ export interface DuplicateStringsOptions {
    */
   ignoreTypeofStrings?: boolean;
   /**
+   * Ignore strings the codebase declares as members of a type.
+   *
+   * The literals of a string-literal union and the values of a string enum:
+   * `"primary"` where `type Role = "primary" | "suppressed"`, `"major"` where
+   * `enum Impact { Major = "major" }`.
+   *
+   * They repeat because the type says they may, and the compiler checks every
+   * occurrence. Extracting a constant loses the correspondence with the
+   * declaration and removes the property that makes them safe: rename the
+   * union member and every use breaks, which is exactly what a shared constant
+   * would stop happening.
+   *
+   * @default true
+   */
+  ignoreDeclaredVocabulary?: boolean;
+
+  /**
+   * Ignore the text between the holes of a template literal.
+   *
+   * A fragment such as the leading word of `Found ${n} things` is half a
+   * sentence, not a constant. It repeats across every message shaped that way,
+   * and the remedy this linter suggests, extracting a constant, would leave
+   * the message reading as an assembled fragment rather than as a sentence.
+   *
+   * A repeated message *shape* is worth noticing, but the answer to that is a
+   * shared function, which is a different finding than this one makes.
+   *
+   * @default true
+   */
+  ignoreTemplateFragments?: boolean;
+
+  /**
+   * Ignore the module a string names, where it names one.
+   *
+   * `import ts from "typescript"` repeats in every file that imports it, which
+   * is what importing is. The remedy this linter offers does not apply: a
+   * specifier cannot be a constant, since an import is resolved before any
+   * constant exists.
+   *
+   * @default true
+   */
+  ignoreModuleSpecifiers?: boolean;
+
+  /**
+   * Which files an occurrence has to be in to count toward the threshold.
+   *
+   * **Everything, by default.** A project that wants a narrower population
+   * says so; the linter does not decide on its behalf, and does not carry an
+   * opinion about which of `_test.ts`, `.test.ts`, `.spec.ts` or `__tests__/`
+   * a project uses.
+   *
+   * The reason to narrow it: a literal spelled out four times across four test
+   * cases is four tests each asserting its own expected value, not a
+   * maintainability problem. The remedy this linter suggests, a shared
+   * constant, makes those tests assert the constant against itself, which is
+   * the one shape a test may never have.
+   *
+   * Occurrences outside the population are still reported in the locations
+   * list, so nothing is hidden; they just do not push a string over the
+   * threshold on their own.
+   *
+   * @default ["**"]
+   * @example ["src/**", "!src/**\/*_test.ts"]
+   */
+  countIn?: readonly string[];
+
+  /**
    * Explicit list of strings to ignore. Use this as an escape hatch for
    * project-specific strings that are intentionally repeated.
    *
@@ -76,9 +145,35 @@ const TYPEOF_STRINGS = new Set([
 ]);
 
 /**
+ * String unions the runtime declares, which a consumer has to spell out.
+ *
+ * The same case as `TYPEOF_STRINGS` above and the same reasoning: these are
+ * members of a type, they repeat because the type says they may, and the
+ * remedy this linter offers is not available. `stdout: PIPED` obscures a Deno
+ * API value and gains nothing, since the union belongs to the runtime and
+ * renaming a member of it is not something a consumer can do.
+ *
+ * Only unions that can be named and pointed at. A word that merely recurs is
+ * not on this list.
+ */
+const RUNTIME_VOCABULARY = new Set([
+  // Deno.CommandOptions stdin/stdout/stderr
+  "piped",
+  "inherit",
+  // Deno.PermissionName
+  "read",
+  "write",
+  "net",
+  "env",
+  "run",
+  "ffi",
+  "sys",
+]);
+
+/**
  * Default options.
  */
-const DEFAULT_OPTIONS: DuplicateStringsOptions = {
+const DEFAULT_OPTIONS: Required<DuplicateStringsOptions> = {
   minLength: 4,
   maxLength: 200,
   threshold: 2,
@@ -98,17 +193,16 @@ const DEFAULT_OPTIONS: DuplicateStringsOptions = {
   ignoreUrls: true,
   ignoreCssClasses: true,
   ignoreTypeofStrings: true,
+  ignoreDeclaredVocabulary: true,
+  ignoreTemplateFragments: true,
+  ignoreModuleSpecifiers: true,
+  countIn: ["**"],
   ignoreStrings: [],
 };
 
 // =============================================================================
 // Helper Functions
 // =============================================================================
-
-function getOptions(config: LinterConfig): DuplicateStringsOptions {
-  const opts = config.options as Partial<DuplicateStringsOptions> | undefined;
-  return { ...DEFAULT_OPTIONS, ...opts };
-}
 
 function looksLikeIdentifier(str: string): boolean {
   if (/^[a-z][a-zA-Z0-9]*$/.test(str) && /[A-Z]/.test(str)) return true;
@@ -138,7 +232,17 @@ function looksLikeCssClasses(str: string): boolean {
   return parts.every((p) => /^[a-z][a-z0-9_-]*$/i.test(p));
 }
 
-function shouldIgnore(str: string, options: DuplicateStringsOptions): boolean {
+function shouldIgnore(
+  str: string,
+  options: DuplicateStringsOptions,
+  vocabulary: ReadonlySet<string>,
+): boolean {
+  if (
+    (options.ignoreDeclaredVocabulary ?? true) &&
+    (vocabulary.has(str) || RUNTIME_VOCABULARY.has(str))
+  ) {
+    return true;
+  }
   if (str.length < (options.minLength ?? 4)) return true;
   if (str.length > (options.maxLength ?? 200)) return true;
   const patterns = options.ignorePatterns ?? [];
@@ -154,6 +258,24 @@ function shouldIgnore(str: string, options: DuplicateStringsOptions): boolean {
   // Ignore explicitly listed strings
   if (options.ignoreStrings?.includes(str)) return true;
   return false;
+}
+
+/**
+ * Whether a file is in the population the threshold is counted over.
+ *
+ * A leading `!` negates, and a negation wins wherever it matches, so
+ * `["src/**", "!src/**\/*_test.ts"]` reads the way it looks.
+ */
+function counts(file: string, patterns: readonly string[]): boolean {
+  let included = false;
+  for (const pattern of patterns) {
+    if (pattern.startsWith("!")) {
+      if (matchesGlob(file, pattern.slice(1))) return false;
+    } else if (matchesGlob(file, pattern)) {
+      included = true;
+    }
+  }
+  return included;
 }
 
 function groupByValue(
@@ -210,22 +332,43 @@ export class DuplicateStringsLinter extends BaseLinter {
 
   readonly requirements: LinterDataRequirements = {
     strings: true,
+    // The declared vocabulary is read off type bodies, so the types have to
+    // have been extracted for it to be there at all.
+    types: true,
   };
 
   lint(data: CodebaseData, config: LinterConfig): Issue[] {
     const issues: Issue[] = [];
-    const options = getOptions(config);
+    const options = optionsFrom<Required<DuplicateStringsOptions>>(
+      config,
+      DEFAULT_OPTIONS,
+    );
 
-    const stringsToCheck = data.allStrings.filter(
-      (str) => !shouldIgnore(str.value, options),
+    const vocabulary = data.literalVocabulary ?? new Set<string>();
+    // Every module this codebase imports, which is where a specifier's
+    // repetition comes from and why it is not duplication.
+    const specifiers = (options.ignoreModuleSpecifiers ?? true)
+      ? new Set(data.allImports.map((i) => i.from))
+      : new Set<string>();
+    const stringsToCheck = data.allStrings.filter((str) =>
+      !specifiers.has(str.value) &&
+      !((options.ignoreTemplateFragments ?? true) && str.isTemplate) &&
+      !shouldIgnore(str.value, options, vocabulary)
     );
 
     const groups = groupByValue(stringsToCheck);
 
+    const population = options.countIn ?? ["**"];
     for (const [value, occurrences] of groups) {
-      const count = occurrences.length;
-      if (count >= (options.threshold ?? 2)) {
-        issues.push(this.createDuplicateIssue(value, occurrences));
+      // Counted over the population, reported over everything: a reader
+      // chasing a finding still sees every place the string turns up.
+      const counted = occurrences.filter((o) =>
+        counts(o.location.file, population)
+      );
+      if (counted.length >= (options.threshold ?? 2)) {
+        issues.push(
+          this.createDuplicateIssue(value, occurrences, counted.length),
+        );
       }
     }
 
@@ -241,8 +384,9 @@ export class DuplicateStringsLinter extends BaseLinter {
   private createDuplicateIssue(
     value: string,
     occurrences: StringLiteral[],
+    countedCount: number = occurrences.length,
   ): Issue {
-    const count = occurrences.length;
+    const count = countedCount;
     const firstOccurrence = occurrences[0]!;
     const suggestedName = suggestConstName(value);
     const files = [...new Set(occurrences.map((o) => o.location.file))];

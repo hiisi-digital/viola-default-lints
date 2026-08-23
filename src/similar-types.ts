@@ -22,6 +22,7 @@ import {
   type SimilarityThresholds,
   type TypeInfo,
 } from "@hiisi/viola";
+import { isIgnored, locationString, optionsFrom } from "./options.ts";
 
 // =============================================================================
 // Configuration
@@ -46,6 +47,18 @@ export interface SimilarTypesOptions {
   warningThreshold?: number;
   /** Threshold for error level */
   errorThreshold?: number;
+  /**
+   * Treat arms of one tagged union as alike on purpose.
+   *
+   * Two types carrying a same-named field whose type is a different string
+   * literal are arms of one union: `{ type: "impact" }` beside
+   * `{ type: "category" }`. They are structurally similar because that is what
+   * a union is, and consolidating them is not available.
+   *
+   * @default true
+   */
+  ignoreTaggedUnionArms?: boolean;
+
   /** Minimum number of fields a type must have to check */
   minFieldCount?: number;
   /** Ignore types with names shorter than this */
@@ -73,7 +86,8 @@ export interface SimilarTypesOptions {
 /**
  * Default options.
  */
-const DEFAULT_OPTIONS: SimilarTypesOptions = {
+const DEFAULT_OPTIONS: Required<SimilarTypesOptions> = {
+  ignoreTaggedUnionArms: true,
   minSimilarity: 0.7,
   warningThreshold: 0.7,
   errorThreshold: 0.85,
@@ -99,34 +113,10 @@ const DEFAULT_OPTIONS: SimilarTypesOptions = {
 /**
  * Get options from linter config.
  */
-function getOptions(config: LinterConfig): Required<SimilarTypesOptions> {
-  const opts = config.options as Partial<SimilarTypesOptions> | undefined;
-  return {
-    ...DEFAULT_OPTIONS,
-    ...opts,
-    ignorePatterns: [
-      ...(DEFAULT_OPTIONS.ignorePatterns ?? []),
-      ...(opts?.ignorePatterns ?? []),
-    ],
-    ignoreTypes: [
-      ...(DEFAULT_OPTIONS.ignoreTypes ?? []),
-      ...(opts?.ignoreTypes ?? []),
-    ],
-  } as Required<SimilarTypesOptions>;
-}
 
 /**
  * Check if a type should be ignored based on name patterns or explicit list.
  */
-function shouldIgnore(
-  name: string,
-  patterns: RegExp[],
-  explicitNames: string[],
-): boolean {
-  if (explicitNames.includes(name)) return true;
-  return patterns.some((pattern) => pattern.test(name));
-}
-
 /**
  * Compare field lists for similarity using Jaccard index.
  * Returns 1 if identical, 0 if completely different.
@@ -190,10 +180,6 @@ function formatType(type: TypeInfo): string {
 /**
  * Get a readable location string.
  */
-function locationString(type: TypeInfo): string {
-  return `${type.location.file}:${type.location.line}`;
-}
-
 /**
  * Get field names as a comma-separated string.
  */
@@ -212,6 +198,31 @@ function fieldNames(type: TypeInfo): string {
 /**
  * Linter that detects types/interfaces with similar names or structures.
  */
+/**
+ * Whether two types are arms of one tagged union.
+ *
+ * True where they share a field name whose annotation is a string literal in
+ * both and the two literals differ. That is exactly the discriminant of a
+ * tagged union, and nothing else has that shape.
+ */
+function shareADiscriminant(a: TypeInfo, b: TypeInfo): boolean {
+  const literal = (annotation: string): string | null => {
+    const text = annotation.trim();
+    return /^(["'`]).*\1$/.test(text) ? text.slice(1, -1) : null;
+  };
+
+  for (const fieldA of a.fields) {
+    const valueA = literal(fieldA.type);
+    if (valueA === null) continue;
+    for (const fieldB of b.fields) {
+      if (fieldB.name !== fieldA.name) continue;
+      const valueB = literal(fieldB.type);
+      if (valueB !== null && valueB !== valueA) return true;
+    }
+  }
+  return false;
+}
+
 export class SimilarTypesLinter extends BaseLinter {
   readonly meta: LinterMeta = {
     id: "similar-types",
@@ -259,7 +270,10 @@ export class SimilarTypesLinter extends BaseLinter {
 
   lint(data: CodebaseData, config: LinterConfig): Issue[] {
     const issues: Issue[] = [];
-    const options = getOptions(config);
+    const options = optionsFrom<Required<SimilarTypesOptions>>(
+      config,
+      DEFAULT_OPTIONS,
+    );
 
     // Debug: Log initial state
     if (Deno.env.get("DEBUG_LINTERS")) {
@@ -279,7 +293,7 @@ export class SimilarTypesLinter extends BaseLinter {
 
       // Must not match ignore patterns or explicit ignore list
       if (
-        shouldIgnore(
+        isIgnored(
           type.name,
           options.ignorePatterns ?? [],
           options.ignoreTypes ?? [],
@@ -552,6 +566,17 @@ export class SimilarTypesLinter extends BaseLinter {
 
         if (checked.has(pairKey)) continue;
         checked.add(pairKey);
+
+        // Arms of one tagged union are structurally alike on purpose. That
+        // is what a tagged union is: the same shape with a field naming which
+        // arm it is. Reporting them as duplicates asks for the discriminant to
+        // be removed, which is asking for the union to stop working.
+        if (
+          options.ignoreTaggedUnionArms &&
+          shareADiscriminant(typeA, typeB)
+        ) {
+          continue;
+        }
 
         // Compare field structures
         const fieldComparison = compareFields(typeA.fields, typeB.fields);

@@ -537,3 +537,61 @@ Deno.test("similar-functions - the group finding still fires for two", () => {
   });
   assertEquals(linter.lint(data, defaultConfig).length, 1);
 });
+
+// =============================================================================
+// A method is not a free function
+// =============================================================================
+
+/** Two classes each with a conventionally-named method, plus a free function. */
+function conventionalMethods() {
+  return mockCodebase({
+    files: [
+      mockFile({
+        path: "src/registry.ts",
+        functions: [
+          mockFunction({ name: "resolve", kind: "method", parent: "Registry" }),
+        ],
+      }),
+      mockFile({
+        path: "src/cache.ts",
+        functions: [
+          mockFunction({ name: "resolve", kind: "method", parent: "Cache" }),
+        ],
+      }),
+    ],
+  });
+}
+
+Deno.test("similar-functions - a method is named for its own type", () => {
+  // `get`, `has`, `size`, `build` recur across unrelated classes because those
+  // are the names for those operations. Comparing them to each other reports
+  // the builder pattern as eight copies of one function.
+  expectNoViolations(linter.lint(conventionalMethods(), defaultConfig));
+});
+
+Deno.test("similar-functions - two free functions of a name are still reported", () => {
+  // The control. Skipping methods must not stop the linter finding the thing
+  // it is for.
+  const data = mockCodebase({
+    files: [
+      mockFile({
+        path: "src/a.ts",
+        functions: [mockFunction({ name: "resolve" })],
+      }),
+      mockFile({
+        path: "src/b.ts",
+        functions: [mockFunction({ name: "resolve" })],
+      }),
+    ],
+  });
+
+  assertEquals(linter.lint(data, defaultConfig).length > 0, true);
+});
+
+Deno.test("similar-functions - comparing methods can be turned on", () => {
+  const violations = linter.lint(conventionalMethods(), {
+    enabled: true,
+    options: { compareMethods: true },
+  });
+  assertEquals(violations.length > 0, true);
+});

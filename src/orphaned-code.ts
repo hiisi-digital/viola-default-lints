@@ -104,6 +104,9 @@ interface OrphanedCodeOptions {
   publicApiFiles?: string[];
 }
 
+/** The name an export with no name of its own carries. */
+const DEFAULT_EXPORT = "default";
+
 const DEFAULT_OPTIONS: Required<OrphanedCodeOptions> = {
   checkFunctions: true,
   checkTypes: true,
@@ -403,7 +406,7 @@ export class OrphanedCodeLinter extends BaseLinter {
     opts: Required<OrphanedCodeOptions>,
   ): boolean {
     // Skip default exports if not checking them
-    if (exp.name === "default" && !opts.checkDefaultExports) {
+    if (exp.name === DEFAULT_EXPORT && !opts.checkDefaultExports) {
       return false;
     }
 
@@ -472,7 +475,7 @@ export class OrphanedCodeLinter extends BaseLinter {
    */
   private importMatchesExport(imp: ImportInfo, exp: ExportInfo): boolean {
     // Default import matches default export
-    if (imp.name === "default" && exp.name === "default") {
+    if (imp.name === DEFAULT_EXPORT && exp.name === DEFAULT_EXPORT) {
       return true;
     }
 
@@ -542,16 +545,16 @@ export class OrphanedCodeLinter extends BaseLinter {
     const resolvedBase = segments.join("/");
     const normalized = this.normalizePath(resolvedBase);
 
-    // Try to find the actual file
-    for (const file of data.files) {
-      const filePath = this.normalizePath(file.path);
-      if (
-        filePath === normalized ||
-        filePath === `${normalized}/index` ||
-        filePath === `${normalized}/mod`
-      ) {
-        return filePath;
-      }
+    // Precedence, not first-past-the-post. The three forms used to be tried
+    // together inside one loop over the files, so whichever file the crawler
+    // happened to reach first won. A project with both `types.ts` and
+    // `types/mod.ts` therefore had `./types.ts` resolve to `types/mod`, every
+    // import of it missed its exports, and the whole of `types.ts` reported as
+    // dead code. That was fourteen of viola's own findings.
+    const candidates = [normalized, `${normalized}/index`, `${normalized}/mod`];
+    const known = new Set(data.files.map((f) => this.normalizePath(f.path)));
+    for (const candidate of candidates) {
+      if (known.has(candidate)) return candidate;
     }
 
     return normalized;

@@ -26,21 +26,44 @@ import {
   type LinterMeta,
   type SourceLocation,
 } from "@hiisi/viola";
+import { optionsFrom } from "./options.ts";
 
 // =============================================================================
 // Configuration
 // =============================================================================
 
 /**
- * Patterns that indicate deprecation.
+ * The kinds of deprecation this linter tells apart.
+ *
+ * Declared rather than left as loose strings on the table below. It is the
+ * vocabulary of this module, every issue code is built from it, and typing it
+ * means a misspelling in the table is a build error rather than a kind nobody
+ * can configure off.
  */
-const DEPRECATION_PATTERNS = [
+export type DeprecationKind =
+  | "annotation"
+  | "marker"
+  | "mention"
+  | "legacy"
+  | "removal"
+  | "obsolete"
+  | "warning";
+
+/**
+ * Patterns that indicate deprecation, most specific first.
+ *
+ * The order matters: the first match on a line wins, so a general pattern
+ * placed above a specific one would swallow it.
+ */
+const DEPRECATION_PATTERNS: readonly {
+  readonly pattern: RegExp;
+  readonly type: DeprecationKind;
+}[] = [
   { pattern: /@deprecated/i, type: "annotation" },
-  // Specific patterns must come before general ones (first match wins due to break)
   { pattern: /\bis\s+deprecated\b/i, type: "mention" },
   { pattern: /\bare\s+deprecated\b/i, type: "mention" },
   { pattern: /\bmarked\s+(?:as\s+)?deprecated\b/i, type: "mention" },
-  { pattern: /\bDEPRECATED\b/i, type: "marker" }, // Now case-insensitive, but after specific patterns
+  { pattern: /\bDEPRECATED\b/i, type: "marker" },
   { pattern: /\blegacy\b/i, type: "legacy" },
   { pattern: /\bto.?be.?removed\b/i, type: "removal" },
   { pattern: /\bwill.?be.?removed\b/i, type: "removal" },
@@ -73,6 +96,11 @@ const FALSE_POSITIVE_PATTERNS = [
  * File patterns to exclude from checking.
  */
 const EXCLUDED_FILE_PATTERNS = [
+  // A test for a detector contains what it detects. This linter's own suite
+  // is twenty-five deprecation markers by construction, and every one of them
+  // is the test doing its job. The source was already excluded for the same
+  // reason; the test was not, which is the half nobody had run into yet.
+  /deprecation-check_test\.ts$/,
   /CHANGELOG/i,
   /HISTORY/i,
   /MIGRATION/i,
@@ -90,8 +118,17 @@ export interface DeprecationCheckOptions {
   checkObsolete?: boolean;
   /** Also check for removal markers */
   checkRemovalMarkers?: boolean;
-  /** Additional file patterns to exclude from checking */
-  excludeFiles?: RegExp[];
+  /**
+   * Files this linter does not read.
+   *
+   * Added to the defaults rather than replacing them. A project with its own
+   * detector, or fixtures full of the words this looks for, names them here:
+   * the alternative is a lint that cannot be tested without failing.
+   *
+   * @default []
+   * @example [/fixtures\/deprecated\//]
+   */
+  excludeFiles?: readonly RegExp[];
   /** Additional patterns that indicate false positives */
   falsePositivePatterns?: RegExp[];
 }
@@ -99,7 +136,7 @@ export interface DeprecationCheckOptions {
 /**
  * Default options.
  */
-const DEFAULT_OPTIONS: DeprecationCheckOptions = {
+const DEFAULT_OPTIONS: Required<DeprecationCheckOptions> = {
   checkLegacy: false, // Too noisy by default
   checkObsolete: true,
   checkRemovalMarkers: true,
@@ -114,13 +151,6 @@ const DEFAULT_OPTIONS: DeprecationCheckOptions = {
 /**
  * Get options from linter config.
  */
-function getOptions(config: LinterConfig): DeprecationCheckOptions {
-  const opts = config.options as Partial<DeprecationCheckOptions> | undefined;
-  return {
-    ...DEFAULT_OPTIONS,
-    ...opts,
-  };
-}
 
 /**
  * Check if a file should be excluded.
@@ -129,13 +159,11 @@ function shouldExcludeFile(
   filePath: string,
   options: DeprecationCheckOptions,
 ): boolean {
-  // Check built-in exclusions
-  if (EXCLUDED_FILE_PATTERNS.some((p) => p.test(filePath))) {
-    return true;
-  }
-  // Check user-provided exclusions
-  const userPatterns = options.excludeFiles ?? [];
-  return userPatterns.some((p) => p.test(filePath));
+  // The defaults plus whatever the project added. It was written twice, once
+  // testing the built-ins and once testing the project's, with the project's
+  // list folded into both.
+  return [...EXCLUDED_FILE_PATTERNS, ...(options.excludeFiles ?? [])]
+    .some((p) => p.test(filePath));
 }
 
 /**
@@ -198,6 +226,36 @@ function getTypeLabel(type: string): string {
 }
 
 /**
+ * Whether an offset on a line sits inside a quoted string.
+ *
+ * The word is a marker when somebody wrote it in a comment. Inside a string
+ * literal it is data: a mock linter named `"deprecated-api"` in a test fixture
+ * is not a deprecation, and neither is a message about deprecation. Scanning
+ * raw lines cannot tell those apart, which is why the false-positive list
+ * below grew a phrase at a time.
+ *
+ * Counting quotes across the line rather than parsing it, because a lint that
+ * needed a parse would need the grammar, and one line is enough context for
+ * the question being asked. An escaped quote does not open or close.
+ */
+function insideString(line: string, offset: number): boolean {
+  let quote: string | null = null;
+  for (let i = 0; i < offset && i < line.length; i++) {
+    const ch = line[i]!;
+    if (ch === "\\") {
+      i++;
+      continue;
+    }
+    if (quote === null) {
+      if (ch === '"' || ch === "'" || ch === "`") quote = ch;
+    } else if (ch === quote) {
+      quote = null;
+    }
+  }
+  return quote !== null;
+}
+
+/**
  * A detected deprecation in the source code.
  */
 interface DeprecationMatch {
@@ -228,7 +286,10 @@ function extractDeprecations(
       // Skip types that are disabled by options
       if (!shouldCheckType(type, options)) continue;
 
-      if (pattern.test(line)) {
+      const match = line.match(pattern);
+      if (match?.index !== undefined) {
+        // A mention inside a string literal is data rather than a marker.
+        if (insideString(line, match.index)) continue;
         // Check for false positives
         if (isFalsePositive(line, options)) continue;
 
@@ -320,7 +381,10 @@ export class DeprecationCheckLinter extends BaseLinter {
 
   lint(data: CodebaseData, config: LinterConfig): Issue[] {
     const issues: Issue[] = [];
-    const options = getOptions(config);
+    const options = optionsFrom<Required<DeprecationCheckOptions>>(
+      config,
+      DEFAULT_OPTIONS,
+    );
 
     for (const file of data.files) {
       // Skip excluded files

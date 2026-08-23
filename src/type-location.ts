@@ -21,30 +21,59 @@ import {
   type LinterDataRequirements,
   type LinterMeta,
 } from "@hiisi/viola";
+import { optionsFrom } from "./options.ts";
 
 // =============================================================================
 // Configuration
 // =============================================================================
 
 /**
- * Packages that are ONLY for types. These can have type definitions anywhere,
- * but MUST NOT have any logic EXCEPT in specially-named files.
+ * How a project says where its types live.
+ *
+ * All of it used to be hardcoded, naming `packages/types` and two literal
+ * paths from a monorepo most consumers are not, and `lint` took its config as
+ * `_config` and never read it. So the lint did not enforce a project's
+ * convention, it enforced one particular project's, and every other project
+ * got the whole of its type surface reported.
  */
-const TYPES_ONLY_PACKAGES = ["packages/types"];
+export interface TypeLocationOptions {
+  /**
+   * Paths that hold types and nothing else.
+   *
+   * **Empty by default, and that is the load-bearing default.** A project that
+   * has not said it keeps a types-only package has not agreed to keep one, and
+   * demanding that of it is inventing a convention on its behalf. With none
+   * declared, `type-outside-types` has nothing to say, and `logic-in-types`
+   * still guards whatever a project does declare.
+   *
+   * @default []
+   * @example ["packages/types", "src/schema"]
+   */
+  typesOnlyPackages?: readonly string[];
+
+  /**
+   * Files that may hold types wherever they sit.
+   *
+   * On top of the two shapes always allowed: anything under a `types/`
+   * directory, and any file named `types.ts` or `*.types.ts`.
+   *
+   * @default []
+   */
+  allowedTypeFiles?: readonly string[];
+
+  /**
+   * File-name patterns that may hold logic inside a types-only package.
+   *
+   * @default the `.ctor` / `.builder` / `.factory` / `.defaults` / `.helpers`
+   * / `.guards` / `.validators` / `.constants` / `.utils` suffixes
+   */
+  logicAllowedPatterns?: readonly RegExp[];
+}
 
 /**
- * Files that are allowed to have type definitions even though they're not
- * in a types-only package.
+ * File name patterns that allow logic in a types-only package, by default.
  */
-const ALLOWED_TYPE_FILES = [
-  "packages/plugin-api/src/types.ts",
-  "packages/plugin/src/types.ts",
-];
-
-/**
- * File name patterns that ALLOW logic in types-only packages.
- */
-const LOGIC_ALLOWED_PATTERNS = [
+const DEFAULT_LOGIC_ALLOWED = [
   /\.ctor\.ts$/,
   /\.builder\.ts$/,
   /\.factory\.ts$/,
@@ -114,6 +143,15 @@ const _ALLOWED_IN_TYPES = [
   /^\s*\{\s*$/,
 ];
 
+/** Options with every default filled in. */
+type Resolved = Required<TypeLocationOptions>;
+
+const DEFAULT_OPTIONS: Resolved = {
+  typesOnlyPackages: [],
+  allowedTypeFiles: [],
+  logicAllowedPatterns: DEFAULT_LOGIC_ALLOWED,
+};
+
 // =============================================================================
 // Type Location Linter
 // =============================================================================
@@ -148,19 +186,22 @@ export class TypeLocationLinter extends BaseLinter {
     files: true,
   };
 
-  lint(data: CodebaseData, _config: LinterConfig): Issue[] {
+  lint(data: CodebaseData, config: LinterConfig): Issue[] {
+    const options = optionsFrom<Resolved>(config, DEFAULT_OPTIONS);
     const issues: Issue[] = [];
 
+    // Nothing declared means nothing to enforce. A project that has not named
+    // a types-only package is not thereby in breach of having one.
+    if (options.typesOnlyPackages.length === 0) return issues;
+
     for (const file of data.files) {
-      const inTypesPackage = this.isTypesOnlyPackage(file.path);
-      const isAllowedTypeFile = this.isAllowedTypeFile(file.path);
-      const isLogicAllowed = this.isLogicAllowedFile(file.path);
+      const inTypesPackage = this.isTypesOnlyPackage(file.path, options);
+      const isAllowedTypeFile = this.isAllowedTypeFile(file.path, options);
+      const isLogicAllowed = this.isLogicAllowedFile(file.path, options);
 
       if (inTypesPackage && !isLogicAllowed) {
-        // Check for logic in types package
         issues.push(...this.checkLogicInTypesFile(file, data));
       } else if (!inTypesPackage && !isAllowedTypeFile) {
-        // Check for types outside types package
         issues.push(...this.checkTypesOutsideTypesPackage(file));
       }
     }
@@ -171,16 +212,21 @@ export class TypeLocationLinter extends BaseLinter {
   /**
    * Check if a file is in a types-only package.
    */
-  private isTypesOnlyPackage(filePath: string): boolean {
-    return TYPES_ONLY_PACKAGES.some((pkg) => filePath.startsWith(pkg));
+  private isTypesOnlyPackage(
+    filePath: string,
+    options: Resolved,
+  ): boolean {
+    return options.typesOnlyPackages.some((pkg) => filePath.startsWith(pkg));
   }
 
   /**
    * Check if a file is allowed to have type definitions.
    */
-  private isAllowedTypeFile(filePath: string): boolean {
-    // Explicit allowlist
-    if (ALLOWED_TYPE_FILES.some((allowed) => filePath === allowed)) {
+  private isAllowedTypeFile(
+    filePath: string,
+    options: Resolved,
+  ): boolean {
+    if (options.allowedTypeFiles.some((allowed) => filePath === allowed)) {
       return true;
     }
 
@@ -201,9 +247,12 @@ export class TypeLocationLinter extends BaseLinter {
   /**
    * Check if a file is allowed to have logic (in types package).
    */
-  private isLogicAllowedFile(filePath: string): boolean {
+  private isLogicAllowedFile(
+    filePath: string,
+    options: Resolved,
+  ): boolean {
     const fileName = filePath.split("/").pop() || "";
-    return LOGIC_ALLOWED_PATTERNS.some((pattern) => pattern.test(fileName));
+    return options.logicAllowedPatterns.some((p) => p.test(fileName));
   }
 
   /**

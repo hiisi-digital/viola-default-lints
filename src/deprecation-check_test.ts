@@ -717,3 +717,52 @@ Deno.test("deprecation-check - violation includes line location", () => {
   assertEquals(typeof first(violations).location.line, "number");
   assertEquals(first(violations).location.line > 0, true);
 });
+
+// =============================================================================
+// A marker is written in a comment, not spelled inside a string
+// =============================================================================
+
+function withLine(line: string) {
+  return mockCodebase({
+    files: [mockFile({ path: "src/thing.ts", content: line })],
+  });
+}
+
+Deno.test("deprecation-check - the word inside a string literal is data", () => {
+  // A mock linter named in a test fixture, which is what this looked like in
+  // viola's own suite. Nothing here is deprecated; something is described.
+  expectNoViolations(
+    linter.lint(
+      withLine('  { name: "deprecated-api", category: "correctness" },'),
+      defaultConfig,
+    ),
+  );
+});
+
+Deno.test("deprecation-check - the word in a comment is still a marker", () => {
+  // The control. If the string rule swallowed everything, the law above would
+  // pass while the linter had stopped finding markers at all.
+  const violations = linter.lint(
+    withLine("// DEPRECATED: use the other one"),
+    defaultConfig,
+  );
+  assertEquals(violations.length, 1);
+});
+
+Deno.test("deprecation-check - a marker after a string on the same line still counts", () => {
+  // The quote counting has to close as well as open, or anything following a
+  // string on its line would be treated as inside one.
+  const violations = linter.lint(
+    withLine('const name = "thing"; // DEPRECATED: going away'),
+    defaultConfig,
+  );
+  assertEquals(violations.length, 1);
+});
+
+Deno.test("deprecation-check - an escaped quote does not open a string", () => {
+  const violations = linter.lint(
+    withLine('const s = "he said \\"hi\\""; // DEPRECATED'),
+    defaultConfig,
+  );
+  assertEquals(violations.length, 1);
+});

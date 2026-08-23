@@ -31,7 +31,7 @@ import type {
 /**
  * Create a source location.
  */
-export function loc(
+function loc(
   file: string,
   line: number,
   column?: number,
@@ -55,7 +55,7 @@ export function first<T>(arr: readonly T[]): T {
 /**
  * Options for creating a mock function.
  */
-export interface MockFunctionOptions {
+interface MockFunctionOptions {
   name?: string;
   file?: string;
   line?: number;
@@ -125,7 +125,7 @@ export function mockParam(
 /**
  * Options for creating a mock type.
  */
-export interface MockTypeOptions {
+interface MockTypeOptions {
   name?: string;
   file?: string;
   line?: number;
@@ -186,7 +186,7 @@ export function mockField(
 /**
  * Options for creating a mock string literal.
  */
-export interface MockStringOptions {
+interface MockStringOptions {
   value?: string;
   file?: string;
   line?: number;
@@ -215,7 +215,7 @@ export function mockString(opts: MockStringOptions = {}): StringLiteral {
 /**
  * Options for creating a mock export.
  */
-export interface MockExportOptions {
+interface MockExportOptions {
   name?: string;
   localName?: string;
   file?: string;
@@ -230,11 +230,32 @@ export interface MockExportOptions {
  */
 export function mockExport(opts: MockExportOptions = {}): ExportInfo {
   return {
-    name: opts.name ?? "testExport",
-    localName: opts.localName,
-    location: loc(opts.file ?? "test.ts", opts.line ?? 1),
+    ...named(opts, "testExport"),
     kind: opts.kind ?? "function",
     isTypeOnly: opts.isTypeOnly ?? false,
+  };
+}
+
+/**
+ * The half an export and an import have in common.
+ *
+ * Both carry a name, a local name, a position and the module they came from,
+ * and both spelled all four out with the same defaults.
+ */
+function named(
+  opts: {
+    name?: string;
+    localName?: string;
+    file?: string;
+    line?: number;
+    from?: string;
+  },
+  fallback: string,
+) {
+  return {
+    name: opts.name ?? fallback,
+    localName: opts.localName,
+    location: loc(opts.file ?? "test.ts", opts.line ?? 1),
     from: opts.from,
   };
 }
@@ -242,7 +263,7 @@ export function mockExport(opts: MockExportOptions = {}): ExportInfo {
 /**
  * Options for creating a mock import.
  */
-export interface MockImportOptions {
+interface MockImportOptions {
   name?: string;
   localName?: string;
   file?: string;
@@ -257,9 +278,8 @@ export interface MockImportOptions {
  */
 export function mockImport(opts: MockImportOptions = {}): ImportInfo {
   return {
-    name: opts.name ?? "testImport",
-    localName: opts.localName,
-    location: loc(opts.file ?? "test.ts", opts.line ?? 1),
+    ...named(opts, "testImport"),
+    // An import always came from somewhere; an export usually did not.
     from: opts.from ?? "./other.ts",
     isTypeOnly: opts.isTypeOnly ?? false,
     isNamespace: opts.isNamespace ?? false,
@@ -273,7 +293,7 @@ export function mockImport(opts: MockImportOptions = {}): ImportInfo {
 /**
  * Options for creating a mock schema.
  */
-export interface MockSchemaOptions {
+interface MockSchemaOptions {
   name?: string;
   file?: string;
   title?: string;
@@ -305,7 +325,7 @@ export function mockSchema(opts: MockSchemaOptions = {}): SchemaInfo {
 /**
  * Options for creating a mock file.
  */
-export interface MockFileOptions {
+interface MockFileOptions {
   path?: string;
   extension?: string;
   lineCount?: number;
@@ -322,6 +342,7 @@ export interface MockFileOptions {
  */
 export function mockFile(opts: MockFileOptions = {}): FileInfo {
   return {
+    grammarId: "",
     path: opts.path ?? "test.ts",
     extension: opts.extension ?? ".ts",
     lineCount: opts.lineCount ?? 100,
@@ -341,7 +362,7 @@ export function mockFile(opts: MockFileOptions = {}): FileInfo {
 /**
  * Options for creating mock codebase data.
  */
-export interface MockCodebaseOptions {
+interface MockCodebaseOptions {
   projectRoot?: string;
   files?: FileInfo[];
   schemas?: SchemaInfo[];
@@ -371,6 +392,15 @@ export function mockCodebase(opts: MockCodebaseOptions = {}): CodebaseData {
     allStrings,
     allExports,
     allImports,
+    // Derived the way the crawler derives it, so a mock codebase knows its own
+    // declared vocabulary without every test having to spell it out.
+    literalVocabulary: new Set(
+      allTypes.flatMap((t) =>
+        [...t.body.matchAll(/(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')/g)]
+          .map((m) => m[1] ?? m[2])
+          .filter((v): v is string => v !== undefined && v !== "")
+      ),
+    ),
   };
 }
 
@@ -386,17 +416,6 @@ export const defaultConfig: LinterConfig = {
 
   options: {},
 };
-
-/**
- * Run a linter and return violations.
- */
-export function runLinter(
-  linter: BaseLinter,
-  data: CodebaseData,
-  config: LinterConfig = defaultConfig,
-) {
-  return linter.lint(data, config);
-}
 
 /**
  * Assert that violations contain expected codes.
@@ -435,20 +454,6 @@ export function expectNoViolations(violations: unknown[]): void {
     throw new Error(
       `Expected no violations, got ${violations.length}:\n` +
         JSON.stringify(violations, null, 2),
-    );
-  }
-}
-
-/**
- * Assert that at least one violation was found.
- */
-export function expectViolations(
-  violations: unknown[],
-  minCount = 1,
-): void {
-  if (violations.length < minCount) {
-    throw new Error(
-      `Expected at least ${minCount} violation(s), got ${violations.length}`,
     );
   }
 }
