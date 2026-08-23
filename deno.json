@@ -33,7 +33,7 @@
   "tasks": {
     "check": "deno check mod.ts",
     "test": "deno test --allow-env src/",
-    "lint": "deno run -A --min-dep-age=0 jsr:@hiisi/viola-cli@^0.3.1 --project . --include src,mod.ts"
+    "lint": "deno run -A --min-dep-age=0 jsr:@hiisi/viola-cli@^0.3.1 --project . --include ."
   },
   "minimumDependencyAge": 0
 }
