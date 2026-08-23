@@ -1,8 +1,8 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@hiisi/flash-freeze@0.1": "0.1.1",
-    "jsr:@hiisi/viola@0.3": "0.3.0",
+    "jsr:@hiisi/flash-freeze@0.1.1-alpha.1": "0.1.1-alpha.1",
+    "jsr:@hiisi/viola@0.3.0-alpha.5": "0.3.0-alpha.5",
     "jsr:@std/assert@1": "1.0.19",
     "jsr:@std/fs@1": "1.0.24",
     "jsr:@std/internal@^1.0.12": "1.0.14",
@@ -12,11 +12,11 @@
     "npm:web-tree-sitter@0.22.6": "0.22.6"
   },
   "jsr": {
-    "@hiisi/flash-freeze@0.1.1": {
-      "integrity": "d47a7143f8f0497101b62faf466574577383add61960265d8fc3323f3c77c512"
+    "@hiisi/flash-freeze@0.1.1-alpha.1": {
+      "integrity": "f431970528bacc17ecacce880eec8c824fcf737e04021043c904fd21eb97f490"
     },
-    "@hiisi/viola@0.3.0": {
-      "integrity": "c15f41be2c3e4054b433caa7ea3f366d5baa10b3dc8af4249b6569296c57a19e",
+    "@hiisi/viola@0.3.0-alpha.5": {
+      "integrity": "593440ad58fe0dfb7f798b60c6e00b908827ec978826dc635e52556f3f081972",
       "dependencies": [
         "jsr:@hiisi/flash-freeze",
         "jsr:@std/fs",
@@ -54,7 +54,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@hiisi/flash-freeze@0.1",
-      "jsr:@hiisi/viola@0.3",
+      "jsr:@hiisi/viola@0.3.0-alpha.5",
       "jsr:@std/assert@1",
       "jsr:@std/fs@1",
       "jsr:@std/path@1"
