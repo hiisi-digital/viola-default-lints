@@ -13,13 +13,13 @@
  */
 
 import {
-    BaseLinter,
-    type CodebaseData,
-    type Issue,
-    type IssueCatalog,
-    type LinterConfig,
-    type LinterDataRequirements,
-    type LinterMeta,
+  BaseLinter,
+  type CodebaseData,
+  type Issue,
+  type IssueCatalog,
+  type LinterConfig,
+  type LinterDataRequirements,
+  type LinterMeta,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -68,11 +68,24 @@ const TYPES_DIRECTORY_PATTERNS = [
  * Patterns that indicate logic (functions, classes, runtime values).
  */
 const _LOGIC_PATTERNS = [
-  { pattern: /^\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)/, type: "function" },
-  { pattern: /^\s*(?:export\s+)?const\s+(\w+)\s*=\s*(?:async\s*)?\([^)]*\)\s*(?::\s*[^=]+)?\s*=>/, type: "arrow" },
+  {
+    pattern: /^\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)/,
+    type: "function",
+  },
+  {
+    pattern:
+      /^\s*(?:export\s+)?const\s+(\w+)\s*=\s*(?:async\s*)?\([^)]*\)\s*(?::\s*[^=]+)?\s*=>/,
+    type: "arrow",
+  },
   { pattern: /^\s*(?:export\s+)?class\s+(\w+)/, type: "class" },
-  { pattern: /^\s*(?:export\s+)?const\s+(\w+)\s*(?::\s*[^=]+)?\s*=\s*[\[{]/, type: "const-object" },
-  { pattern: /^\s*(?:export\s+)?const\s+(\w+)\s*=\s*\w+\s*\(/, type: "const-call" },
+  {
+    pattern: /^\s*(?:export\s+)?const\s+(\w+)\s*(?::\s*[^=]+)?\s*=\s*[\[{]/,
+    type: "const-object",
+  },
+  {
+    pattern: /^\s*(?:export\s+)?const\s+(\w+)\s*=\s*\w+\s*\(/,
+    type: "const-call",
+  },
 ];
 
 /**
@@ -197,7 +210,10 @@ export class TypeLocationLinter extends BaseLinter {
    * Check for type declarations outside types package.
    */
   private checkTypesOutsideTypesPackage(
-    file: { path: string; types: readonly { name: string; location: { line: number } }[] }
+    file: {
+      path: string;
+      types: readonly { name: string; location: { line: number } }[];
+    },
   ): Issue[] {
     const issues: Issue[] = [];
 
@@ -208,12 +224,11 @@ export class TypeLocationLinter extends BaseLinter {
           { file: file.path, line: type.location.line },
           `Type/interface "${type.name}" declared outside types package.`,
           {
-            suggestion:
-              "1. Move to packages/types/ (if shared)\n" +
+            suggestion: "1. Move to packages/types/ (if shared)\n" +
               "2. Create a local types/ directory (if package-local)\n" +
               "3. Rename file to types.ts or *.types.ts",
-          }
-        )
+          },
+        ),
       );
     }
 
@@ -225,8 +240,11 @@ export class TypeLocationLinter extends BaseLinter {
    * This requires reading the actual file content to check line by line.
    */
   private checkLogicInTypesFile(
-    file: { path: string; functions: readonly { name: string; location: { line: number } }[] },
-    _data: CodebaseData
+    file: {
+      path: string;
+      functions: readonly { name: string; location: { line: number } }[];
+    },
+    _data: CodebaseData,
   ): Issue[] {
     const issues: Issue[] = [];
 
@@ -238,16 +256,15 @@ export class TypeLocationLinter extends BaseLinter {
           { file: file.path, line: func.location.line },
           `Function "${func.name}" found in types package.`,
           {
-            suggestion:
-              "Move to one of:\n" +
+            suggestion: "Move to one of:\n" +
               "  - *.helpers.ts (helper functions)\n" +
               "  - *.factory.ts (factory functions)\n" +
               "  - *.constants.ts (constants)\n" +
               "  - *.guards.ts (type guards)\n" +
               "  - *.validators.ts (validation)\n" +
               "  - *.defaults.ts (default values)",
-          }
-        )
+          },
+        ),
       );
     }
 

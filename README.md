@@ -13,10 +13,12 @@
 ## What it does
 
 This package provides a set of opinionated convention linters that work with the
-[viola](https://jsr.io/@hiisi/viola) runtime. These linters check for common issues like
-code duplication, naming conventions, documentation gaps, and file organization problems.
+[viola](https://jsr.io/@hiisi/viola) runtime. These linters check for common
+issues like code duplication, naming conventions, documentation gaps, and file
+organization problems.
 
 The plugin includes default rules that classify issues by impact:
+
 - Critical/Major impact → error
 - Minor impact → warn
 - Trivial impact → info
@@ -32,12 +34,12 @@ deno add jsr:@hiisi/viola jsr:@hiisi/viola-default-lints
 Create a `viola.config.ts`:
 
 ```ts
-import { viola, report, when } from "@hiisi/viola";
+import { report, viola, when } from "@hiisi/viola";
 import defaultLints from "@hiisi/viola-default-lints";
 
 export default viola()
-  .use(defaultLints)  // adds linters + default rules
-  .rule(report.off, when.in("**/*_test.ts"));  // your overrides
+  .use(defaultLints) // adds linters + default rules
+  .rule(report.off, when.in("**/*_test.ts")); // your overrides
 ```
 
 Run with CLI:
@@ -46,18 +48,19 @@ Run with CLI:
 deno run -A jsr:@hiisi/viola-cli
 ```
 
-Rules use **"last wins" semantics** (like CSS). Your rules come after plugin rules, so they take precedence.
+Rules use **"last wins" semantics** (like CSS). Your rules come after plugin
+rules, so they take precedence.
 
 ### Without Default Rules
 
 If you want just the linters without any default rules:
 
 ```ts
-import { viola, report, when, Impact } from "@hiisi/viola";
+import { Impact, report, viola, when } from "@hiisi/viola";
 import { linters } from "@hiisi/viola-default-lints";
 
 export default viola()
-  .add(linters)  // just linters, no default rules
+  .add(linters) // just linters, no default rules
   .rule(report.error, when.impact.atLeast(Impact.Critical))
   .rule(report.warn, when.impact.atLeast(Impact.Major));
 ```
@@ -65,7 +68,7 @@ export default viola()
 ### Configure Linter Settings
 
 ```ts
-import { viola, report, when } from "@hiisi/viola";
+import { report, viola, when } from "@hiisi/viola";
 import defaultLints from "@hiisi/viola-default-lints";
 
 export default viola()
@@ -78,8 +81,11 @@ export default viola()
 ### Import Individual Linters
 
 ```ts
-import { viola, report, when, Impact } from "@hiisi/viola";
-import { typeLocationLinter, similarFunctionsLinter } from "@hiisi/viola-default-lints";
+import { Impact, report, viola, when } from "@hiisi/viola";
+import {
+  similarFunctionsLinter,
+  typeLocationLinter,
+} from "@hiisi/viola-default-lints";
 
 export default viola()
   .add(typeLocationLinter)
@@ -89,19 +95,22 @@ export default viola()
 
 ## Available Linters
 
-| Linter | Description |
-|--------|-------------|
-| `type-location` | Types must be in `types/` directories, and logic must stay out of types-only packages |
-| `similar-functions` | Detect similar function names |
-| `similar-types` | Detect similar type names and identical field structures |
-| `duplicate-strings` | Find repeated string literals |
-| `duplicate-logic` | Find functions with similar implementations |
-| `deprecation-check` | Find `@deprecated` annotations and removal markers |
-| `missing-docs` | Find exports without documentation |
-| `orphaned-code` | Find exports that are never imported |
-| `schema-collision` | Find naming conflicts between schemas and types |
+| Linter              | Description                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------- |
+| `type-location`     | Types must be in `types/` directories, and logic must stay out of types-only packages |
+| `similar-functions` | Detect similar function names                                                         |
+| `similar-types`     | Detect similar type names and identical field structures                              |
+| `duplicate-strings` | Find repeated string literals                                                         |
+| `duplicate-logic`   | Find functions with similar implementations                                           |
+| `deprecation-check` | Find `@deprecated` annotations and removal markers                                    |
+| `missing-docs`      | Find exports without documentation                                                    |
+| `orphaned-code`     | Find exports that are never imported                                                  |
+| `schema-collision`  | Find naming conflicts between schemas and types                                       |
 
-`missing-docs` reads the `jsDoc` field on extracted functions and types. Viola's extraction pass does not populate that field, so against real crawled data every exported function and type is reported as undocumented. Keep the rule off, or scope it, until extraction fills `jsDoc`.
+`missing-docs` reads the `jsDoc` field on extracted functions and types. Viola's
+extraction pass does not populate that field, so against real crawled data every
+exported function and type is reported as undocumented. Keep the rule off, or
+scope it, until extraction fills `jsDoc`.
 
 ## Default Rules
 
@@ -115,8 +124,9 @@ The plugin configures these rules (your rules after `.use()` override them):
 
 ## Writing Your Own Linters
 
-See the [viola documentation](https://jsr.io/@hiisi/viola) for how to create custom linters
-using the `BaseLinter` class. The linters in this package serve as examples.
+See the [viola documentation](https://jsr.io/@hiisi/viola) for how to create
+custom linters using the `BaseLinter` class. The linters in this package serve
+as examples.
 
 ## Support
 
@@ -128,7 +138,8 @@ on open-source projects like this :)
 
 ## License
 
-> You can check out the full license [here](https://github.com/hiisi-digital/viola-default-lints/blob/main/LICENSE)
+> You can check out the full license
+> [here](https://github.com/hiisi-digital/viola-default-lints/blob/main/LICENSE)
 
 This project is licensed under the terms of the **Mozilla Public License 2.0**.
 

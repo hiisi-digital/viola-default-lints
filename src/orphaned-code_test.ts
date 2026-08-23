@@ -8,13 +8,13 @@ import type { LinterConfig } from "@hiisi/viola";
 import { assertEquals } from "@std/assert";
 import { OrphanedCodeLinter } from "./orphaned-code.ts";
 import {
-    defaultConfig,
-    expectNoViolations,
-    first,
-    mockCodebase,
-    mockFile,
-    mockExport,
-    mockImport,
+  defaultConfig,
+  expectNoViolations,
+  first,
+  mockCodebase,
+  mockExport,
+  mockFile,
+  mockImport,
 } from "./test_utils.ts";
 
 const linter = new OrphanedCodeLinter();
@@ -29,13 +29,22 @@ Deno.test("orphaned-code - no violations for used exports", () => {
       mockFile({
         path: "src/utils.ts",
         exports: [
-          mockExport({ name: "helper", kind: "function", file: "src/utils.ts", line: 1 }),
+          mockExport({
+            name: "helper",
+            kind: "function",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
         path: "src/app.ts",
         imports: [
-          mockImport({ name: "helper", from: "./utils.ts", file: "src/app.ts" }),
+          mockImport({
+            name: "helper",
+            from: "./utils.ts",
+            file: "src/app.ts",
+          }),
         ],
       }),
     ],
@@ -51,7 +60,12 @@ Deno.test("orphaned-code - reports unused exported function", () => {
       mockFile({
         path: "src/utils.ts",
         exports: [
-          mockExport({ name: "unusedHelper", kind: "function", file: "src/utils.ts", line: 1 }),
+          mockExport({
+            name: "unusedHelper",
+            kind: "function",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
@@ -72,7 +86,12 @@ Deno.test("orphaned-code - reports unused exported type", () => {
       mockFile({
         path: "src/types.ts",
         exports: [
-          mockExport({ name: "UnusedType", kind: "type", file: "src/types.ts", line: 1 }),
+          mockExport({
+            name: "UnusedType",
+            kind: "type",
+            file: "src/types.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
@@ -97,7 +116,12 @@ Deno.test("orphaned-code - does not report exports from mod.ts", () => {
       mockFile({
         path: "mod.ts",
         exports: [
-          mockExport({ name: "publicAPI", kind: "function", file: "mod.ts", line: 1 }),
+          mockExport({
+            name: "publicAPI",
+            kind: "function",
+            file: "mod.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -113,7 +137,12 @@ Deno.test("orphaned-code - does not report exports from index.ts", () => {
       mockFile({
         path: "src/index.ts",
         exports: [
-          mockExport({ name: "publicAPI", kind: "function", file: "src/index.ts", line: 1 }),
+          mockExport({
+            name: "publicAPI",
+            kind: "function",
+            file: "src/index.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -129,7 +158,12 @@ Deno.test("orphaned-code - does not report exports from main.ts", () => {
       mockFile({
         path: "src/main.ts",
         exports: [
-          mockExport({ name: "publicAPI", kind: "function", file: "src/main.ts", line: 1 }),
+          mockExport({
+            name: "publicAPI",
+            kind: "function",
+            file: "src/main.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -149,16 +183,31 @@ Deno.test("orphaned-code - treats re-exports as usage by default", () => {
       mockFile({
         path: "src/utils.ts",
         exports: [
-          mockExport({ name: "helper", kind: "function", file: "src/utils.ts", line: 1 }),
+          mockExport({
+            name: "helper",
+            kind: "function",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
         path: "mod.ts",
         exports: [
-          mockExport({ name: "helper", kind: "re-export", from: "./src/utils.ts", file: "mod.ts", line: 1 }),
+          mockExport({
+            name: "helper",
+            kind: "re-export",
+            from: "./src/utils.ts",
+            file: "mod.ts",
+            line: 1,
+          }),
         ],
         imports: [
-          mockImport({ name: "helper", from: "./src/utils.ts", file: "mod.ts" }),
+          mockImport({
+            name: "helper",
+            from: "./src/utils.ts",
+            file: "mod.ts",
+          }),
         ],
       }),
     ],
@@ -179,13 +228,24 @@ Deno.test("orphaned-code - can disable re-export as usage", () => {
       mockFile({
         path: "src/utils.ts",
         exports: [
-          mockExport({ name: "helper", kind: "function", file: "src/utils.ts", line: 1 }),
+          mockExport({
+            name: "helper",
+            kind: "function",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
         path: "mod.ts",
         exports: [
-          mockExport({ name: "helper", kind: "re-export", from: "./src/utils.ts", file: "mod.ts", line: 1 }),
+          mockExport({
+            name: "helper",
+            kind: "re-export",
+            from: "./src/utils.ts",
+            file: "mod.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -206,14 +266,29 @@ Deno.test("orphaned-code - namespace imports use all exports", () => {
       mockFile({
         path: "src/utils.ts",
         exports: [
-          mockExport({ name: "helperA", kind: "function", file: "src/utils.ts", line: 1 }),
-          mockExport({ name: "helperB", kind: "function", file: "src/utils.ts", line: 10 }),
+          mockExport({
+            name: "helperA",
+            kind: "function",
+            file: "src/utils.ts",
+            line: 1,
+          }),
+          mockExport({
+            name: "helperB",
+            kind: "function",
+            file: "src/utils.ts",
+            line: 10,
+          }),
         ],
       }),
       mockFile({
         path: "src/app.ts",
         imports: [
-          mockImport({ name: "utils", from: "./utils.ts", file: "src/app.ts", isNamespace: true }),
+          mockImport({
+            name: "utils",
+            from: "./utils.ts",
+            file: "src/app.ts",
+            isNamespace: true,
+          }),
         ],
       }),
     ],
@@ -233,7 +308,12 @@ Deno.test("orphaned-code - does not check default exports by default", () => {
       mockFile({
         path: "src/component.ts",
         exports: [
-          mockExport({ name: "default", kind: "function", file: "src/component.ts", line: 1 }),
+          mockExport({
+            name: "default",
+            kind: "function",
+            file: "src/component.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -254,7 +334,12 @@ Deno.test("orphaned-code - can enable default export checking", () => {
       mockFile({
         path: "src/component.ts",
         exports: [
-          mockExport({ name: "default", kind: "function", file: "src/component.ts", line: 1 }),
+          mockExport({
+            name: "default",
+            kind: "function",
+            file: "src/component.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -280,7 +365,12 @@ Deno.test("orphaned-code - can disable function checking", () => {
       mockFile({
         path: "src/utils.ts",
         exports: [
-          mockExport({ name: "unusedFunction", kind: "function", file: "src/utils.ts", line: 1 }),
+          mockExport({
+            name: "unusedFunction",
+            kind: "function",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -301,7 +391,12 @@ Deno.test("orphaned-code - can disable type checking", () => {
       mockFile({
         path: "src/types.ts",
         exports: [
-          mockExport({ name: "UnusedType", kind: "type", file: "src/types.ts", line: 1 }),
+          mockExport({
+            name: "UnusedType",
+            kind: "type",
+            file: "src/types.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -314,7 +409,7 @@ Deno.test("orphaned-code - can disable type checking", () => {
 Deno.test("orphaned-code - respects ignoreExportPatterns option", () => {
   const config: LinterConfig = {
     ...defaultConfig,
-    options: { 
+    options: {
       ignoreExportPatterns: [/^_/, /Test$/],
     },
   };
@@ -324,8 +419,18 @@ Deno.test("orphaned-code - respects ignoreExportPatterns option", () => {
       mockFile({
         path: "src/utils.ts",
         exports: [
-          mockExport({ name: "_internalHelper", kind: "function", file: "src/utils.ts", line: 1 }),
-          mockExport({ name: "helperTest", kind: "function", file: "src/utils.ts", line: 10 }),
+          mockExport({
+            name: "_internalHelper",
+            kind: "function",
+            file: "src/utils.ts",
+            line: 1,
+          }),
+          mockExport({
+            name: "helperTest",
+            kind: "function",
+            file: "src/utils.ts",
+            line: 10,
+          }),
         ],
       }),
     ],
@@ -338,7 +443,7 @@ Deno.test("orphaned-code - respects ignoreExportPatterns option", () => {
 Deno.test("orphaned-code - respects publicApiFiles option", () => {
   const config: LinterConfig = {
     ...defaultConfig,
-    options: { 
+    options: {
       publicApiFiles: ["src/utils/hash.ts", "src/utils/similarity.ts"],
     },
   };
@@ -348,13 +453,23 @@ Deno.test("orphaned-code - respects publicApiFiles option", () => {
       mockFile({
         path: "src/utils/hash.ts",
         exports: [
-          mockExport({ name: "hashCode", kind: "function", file: "src/utils/hash.ts", line: 1 }),
+          mockExport({
+            name: "hashCode",
+            kind: "function",
+            file: "src/utils/hash.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
         path: "src/utils/similarity.ts",
         exports: [
-          mockExport({ name: "compare", kind: "function", file: "src/utils/similarity.ts", line: 1 }),
+          mockExport({
+            name: "compare",
+            kind: "function",
+            file: "src/utils/similarity.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -367,7 +482,7 @@ Deno.test("orphaned-code - respects publicApiFiles option", () => {
 Deno.test("orphaned-code - respects entryPointPatterns option", () => {
   const config: LinterConfig = {
     ...defaultConfig,
-    options: { 
+    options: {
       entryPointPatterns: [/cli\.ts$/],
     },
   };
@@ -377,7 +492,12 @@ Deno.test("orphaned-code - respects entryPointPatterns option", () => {
       mockFile({
         path: "src/cli.ts",
         exports: [
-          mockExport({ name: "main", kind: "function", file: "src/cli.ts", line: 1 }),
+          mockExport({
+            name: "main",
+            kind: "function",
+            file: "src/cli.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -397,7 +517,12 @@ Deno.test("orphaned-code - ignores test files by default", () => {
       mockFile({
         path: "src/app_test.ts",
         exports: [
-          mockExport({ name: "testHelper", kind: "function", file: "src/app_test.ts", line: 1 }),
+          mockExport({
+            name: "testHelper",
+            kind: "function",
+            file: "src/app_test.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -413,7 +538,12 @@ Deno.test("orphaned-code - ignores spec files by default", () => {
       mockFile({
         path: "src/app.spec.ts",
         exports: [
-          mockExport({ name: "testHelper", kind: "function", file: "src/app.spec.ts", line: 1 }),
+          mockExport({
+            name: "testHelper",
+            kind: "function",
+            file: "src/app.spec.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -429,7 +559,12 @@ Deno.test("orphaned-code - ignores tests/ directory by default", () => {
       mockFile({
         path: "tests/helpers.ts",
         exports: [
-          mockExport({ name: "testHelper", kind: "function", file: "tests/helpers.ts", line: 1 }),
+          mockExport({
+            name: "testHelper",
+            kind: "function",
+            file: "tests/helpers.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -449,7 +584,11 @@ Deno.test("orphaned-code - ignores external imports", () => {
       mockFile({
         path: "src/app.ts",
         imports: [
-          mockImport({ name: "assertEquals", from: "@std/assert", file: "src/app.ts" }),
+          mockImport({
+            name: "assertEquals",
+            from: "@std/assert",
+            file: "src/app.ts",
+          }),
           mockImport({ name: "readFile", from: "node:fs", file: "src/app.ts" }),
         ],
       }),
@@ -470,7 +609,13 @@ Deno.test("orphaned-code - does not report re-export kinds as orphaned", () => {
       mockFile({
         path: "mod.ts",
         exports: [
-          mockExport({ name: "helper", kind: "re-export", from: "./src/utils.ts", file: "mod.ts", line: 1 }),
+          mockExport({
+            name: "helper",
+            kind: "re-export",
+            from: "./src/utils.ts",
+            file: "mod.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -490,22 +635,41 @@ Deno.test("orphaned-code - handles complex import/export chains", () => {
       mockFile({
         path: "src/core/utils.ts",
         exports: [
-          mockExport({ name: "coreHelper", kind: "function", file: "src/core/utils.ts", line: 1 }),
+          mockExport({
+            name: "coreHelper",
+            kind: "function",
+            file: "src/core/utils.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         exports: [
-          mockExport({ name: "coreHelper", kind: "re-export", from: "./core/utils.ts", file: "src/utils.ts", line: 1 }),
+          mockExport({
+            name: "coreHelper",
+            kind: "re-export",
+            from: "./core/utils.ts",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
         imports: [
-          mockImport({ name: "coreHelper", from: "./core/utils.ts", file: "src/utils.ts" }),
+          mockImport({
+            name: "coreHelper",
+            from: "./core/utils.ts",
+            file: "src/utils.ts",
+          }),
         ],
       }),
       mockFile({
         path: "src/app.ts",
         imports: [
-          mockImport({ name: "coreHelper", from: "./utils.ts", file: "src/app.ts" }),
+          mockImport({
+            name: "coreHelper",
+            from: "./utils.ts",
+            file: "src/app.ts",
+          }),
         ],
       }),
     ],
@@ -545,7 +709,12 @@ Deno.test("orphaned-code - handles circular dependencies gracefully", () => {
       mockFile({
         path: "src/a.ts",
         exports: [
-          mockExport({ name: "funcA", kind: "function", file: "src/a.ts", line: 1 }),
+          mockExport({
+            name: "funcA",
+            kind: "function",
+            file: "src/a.ts",
+            line: 1,
+          }),
         ],
         imports: [
           mockImport({ name: "funcB", from: "./b.ts", file: "src/a.ts" }),
@@ -554,7 +723,12 @@ Deno.test("orphaned-code - handles circular dependencies gracefully", () => {
       mockFile({
         path: "src/b.ts",
         exports: [
-          mockExport({ name: "funcB", kind: "function", file: "src/b.ts", line: 1 }),
+          mockExport({
+            name: "funcB",
+            kind: "function",
+            file: "src/b.ts",
+            line: 1,
+          }),
         ],
         imports: [
           mockImport({ name: "funcA", from: "./a.ts", file: "src/b.ts" }),
@@ -578,7 +752,12 @@ Deno.test("orphaned-code - violation has correct linter name", () => {
       mockFile({
         path: "src/utils.ts",
         exports: [
-          mockExport({ name: "unusedHelper", kind: "function", file: "src/utils.ts", line: 1 }),
+          mockExport({
+            name: "unusedHelper",
+            kind: "function",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -594,7 +773,12 @@ Deno.test("orphaned-code - violation has correct severity", () => {
       mockFile({
         path: "src/utils.ts",
         exports: [
-          mockExport({ name: "unusedHelper", kind: "function", file: "src/utils.ts", line: 1 }),
+          mockExport({
+            name: "unusedHelper",
+            kind: "function",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -610,7 +794,12 @@ Deno.test("orphaned-code - violation includes suggestion", () => {
       mockFile({
         path: "src/utils.ts",
         exports: [
-          mockExport({ name: "unusedHelper", kind: "function", file: "src/utils.ts", line: 1 }),
+          mockExport({
+            name: "unusedHelper",
+            kind: "function",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
       }),
     ],

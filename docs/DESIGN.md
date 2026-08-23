@@ -2,7 +2,8 @@
 
 ## Overview
 
-`@hiisi/viola-default-lints` is a plugin package for the Viola convention linter that provides a curated set of convention linters with sensible default rules.
+`@hiisi/viola-default-lints` is a plugin package for the Viola convention linter
+that provides a curated set of convention linters with sensible default rules.
 
 ## Purpose
 
@@ -71,15 +72,18 @@ This package provides:
 
 ### type-location
 
-**Purpose**: Enforce that type definitions live in dedicated `types/` directories.
+**Purpose**: Enforce that type definitions live in dedicated `types/`
+directories.
 
 **Issues**:
+
 - `type-in-impl` - Type defined in implementation file
 - `interface-in-impl` - Interface defined in implementation file
 - `enum-in-impl` - Enum defined in implementation file
 - `type-alias-in-impl` - Type alias in implementation file
 
 **Configuration**:
+
 - `allowInlineTypes` - Allow small inline types
 - `typesDirPattern` - Glob pattern for types directories
 
@@ -88,12 +92,14 @@ This package provides:
 **Purpose**: Detect functions with similar names that might be duplicates.
 
 **Issues**:
+
 - `similar-name-high` - 85%+ name similarity (likely duplicate)
 - `similar-name-medium` - 70-85% similarity (review needed)
 - `duplicate-function` - Same name and signature in multiple files
 - `same-name-different-params` - Same name, different signatures
 
 **Configuration**:
+
 - `minSimilarity` - Minimum similarity to report (0-1)
 - `warningThreshold` - Threshold for warning level
 - `errorThreshold` - Threshold for error level
@@ -107,11 +113,13 @@ This package provides:
 **Purpose**: Detect types with similar names that might cause confusion.
 
 **Issues**:
+
 - `similar-name-high` - Very similar type names
 - `similar-name-medium` - Moderately similar names
 - `duplicate-type` - Same type in multiple locations
 
 **Configuration**:
+
 - `minSimilarity` - Minimum similarity to report
 - `ignorePatterns` - Patterns to ignore
 
@@ -120,10 +128,12 @@ This package provides:
 **Purpose**: Find repeated string literals that should be constants.
 
 **Issues**:
+
 - `repeated-string` - String appears multiple times
 - `magic-string` - Unexplained string literal
 
 **Configuration**:
+
 - `minLength` - Minimum string length to check
 - `minOccurrences` - Minimum occurrences to report
 - `ignorePatterns` - Patterns to ignore (e.g., test strings)
@@ -133,10 +143,12 @@ This package provides:
 **Purpose**: Detect duplicated code patterns.
 
 **Issues**:
+
 - `duplicate-block` - Identical code blocks
 - `similar-block` - Very similar code blocks
 
 **Configuration**:
+
 - `minBlockSize` - Minimum lines to consider
 - `similarityThreshold` - Threshold for similar detection
 
@@ -145,11 +157,13 @@ This package provides:
 **Purpose**: Find deprecated code past its removal date.
 
 **Issues**:
+
 - `past-removal-date` - Deprecation removal date has passed
 - `approaching-removal` - Removal date approaching
 - `missing-removal-date` - Deprecated without removal date
 
 **Configuration**:
+
 - `warningDays` - Days before removal to warn
 - `requireRemovalDate` - Require removal dates on deprecations
 
@@ -158,11 +172,13 @@ This package provides:
 **Purpose**: Find exported symbols without documentation.
 
 **Issues**:
+
 - `missing-function-doc` - Exported function without JSDoc
 - `missing-type-doc` - Exported type without documentation
 - `missing-class-doc` - Exported class without documentation
 
 **Configuration**:
+
 - `requireExamples` - Require @example in docs
 - `requireParams` - Require @param for all parameters
 
@@ -171,11 +187,13 @@ This package provides:
 **Purpose**: Find internal code that's never used.
 
 **Issues**:
+
 - `unused-function` - Internal function never called
 - `unused-type` - Internal type never referenced
 - `unused-export` - Export never imported elsewhere
 
 **Configuration**:
+
 - `ignorePatterns` - Patterns for intentionally unused code
 - `checkTests` - Include test files in analysis
 
@@ -184,10 +202,12 @@ This package provides:
 **Purpose**: Find conflicting schema or type definitions.
 
 **Issues**:
+
 - `conflicting-schema` - Same name, different shapes
 - `shadowed-type` - Type shadows another in scope
 
 **Configuration**:
+
 - `schemaPatterns` - Patterns identifying schema files
 
 ## Default Rules
@@ -217,6 +237,7 @@ readonly catalog: IssueCatalog = {
 ```
 
 Categories:
+
 - `correctness` - Code that may not work correctly
 - `maintainability` - Code that's hard to maintain
 - `consistency` - Code that violates project conventions
@@ -224,6 +245,7 @@ Categories:
 - `security` - Code with security concerns
 
 Impact levels:
+
 - `critical` - Must fix immediately
 - `major` - Should fix soon
 - `minor` - Nice to fix
@@ -265,7 +287,6 @@ viola-default-lints/
     ├── schema-collision.ts
     ├── schema-collision_test.ts
     └── test_utils.ts               # Shared test utilities
-
 ```
 
 ## Dependencies
@@ -285,18 +306,18 @@ import { viola } from "@hiisi/viola";
 import defaultLints from "@hiisi/viola-default-lints";
 
 export default viola()
-  .use(defaultLints)  // All linters + default rules
-  .rule(report.off, when.in("**/*_test.ts"));  // Your overrides
+  .use(defaultLints) // All linters + default rules
+  .rule(report.off, when.in("**/*_test.ts")); // Your overrides
 ```
 
 ### Linters Only (Custom Rules)
 
 ```typescript
-import { viola, report, when, Impact } from "@hiisi/viola";
+import { Impact, report, viola, when } from "@hiisi/viola";
 import { linters } from "@hiisi/viola-default-lints";
 
 export default viola()
-  .add(linters)  // Just linters, no default rules
+  .add(linters) // Just linters, no default rules
   .rule(report.error, when.impact.atLeast(Impact.Critical));
 ```
 
@@ -304,7 +325,10 @@ export default viola()
 
 ```typescript
 import { viola } from "@hiisi/viola";
-import { typeLocationLinter, similarFunctionsLinter } from "@hiisi/viola-default-lints";
+import {
+  similarFunctionsLinter,
+  typeLocationLinter,
+} from "@hiisi/viola-default-lints";
 
 export default viola()
   .add(typeLocationLinter)
@@ -325,7 +349,7 @@ const defaultLints: ViolaPlugin = {
     }
     // Apply default rules
     viola.rule(report.error, when.impact.atLeast(Impact.Major));
-  }
+  },
 };
 ```
 
@@ -372,6 +396,7 @@ This allows targeted rule configuration:
 4. **Regression tests** for fixed bugs
 
 Each linter should have corresponding `*_test.ts` file testing:
+
 - Basic detection
 - Configuration options
 - Edge cases

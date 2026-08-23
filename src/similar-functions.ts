@@ -10,16 +10,16 @@
  */
 
 import {
-    BaseLinter,
-    type CodebaseData,
-    compareIdentifiers,
-    type FunctionInfo,
-    type Issue,
-    type IssueCatalog,
-    type LinterConfig,
-    type LinterDataRequirements,
-    type LinterMeta,
-    type SimilarityThresholds,
+  BaseLinter,
+  type CodebaseData,
+  compareIdentifiers,
+  type FunctionInfo,
+  type Issue,
+  type IssueCatalog,
+  type LinterConfig,
+  type LinterDataRequirements,
+  type LinterMeta,
+  type SimilarityThresholds,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -30,9 +30,9 @@ import {
  * Thresholds for function name similarity.
  */
 const _FUNCTION_NAME_THRESHOLDS: SimilarityThresholds = {
-  low: 0.5,    // Below this: no match
+  low: 0.5, // Below this: no match
   medium: 0.7, // Above this: warning
-  high: 0.85,  // Above this: error
+  high: 0.85, // Above this: error
 };
 
 /**
@@ -55,10 +55,10 @@ export interface SimilarFunctionsOptions {
   /**
    * Explicit list of function names to ignore. Use this as an escape hatch for
    * functions that are intentionally similar by design.
-   * 
+   *
    * Unlike patterns, this requires you to explicitly list each function,
    * forcing you to think about whether the similarity is truly intentional.
-   * 
+   *
    * @default []
    * @example ["impactCond", "categoryCond", "fileCond"]
    */
@@ -76,11 +76,11 @@ const DEFAULT_OPTIONS: SimilarFunctionsOptions = {
   minNameLength: 3,
   ignorePatterns: [
     /^handle[A-Z]/, // Event handlers are expected to be similar
-    /^on[A-Z]/,     // Event callbacks
-    /^get[A-Z]/,    // Getters often have similar patterns
-    /^set[A-Z]/,    // Setters
-    /^is[A-Z]/,     // Boolean checks
-    /^has[A-Z]/,    // Boolean checks
+    /^on[A-Z]/, // Event callbacks
+    /^get[A-Z]/, // Getters often have similar patterns
+    /^set[A-Z]/, // Setters
+    /^is[A-Z]/, // Boolean checks
+    /^has[A-Z]/, // Boolean checks
   ],
   // `constructor` is not a function name anybody chose, and constructors are
   // supposed to differ between classes. Reporting that one "exists in multiple
@@ -106,7 +106,11 @@ function getOptions(config: LinterConfig): SimilarFunctionsOptions {
 /**
  * Check if a function should be ignored based on name patterns.
  */
-function shouldIgnore(name: string, patterns: RegExp[], explicitNames: string[]): boolean {
+function shouldIgnore(
+  name: string,
+  patterns: RegExp[],
+  explicitNames: string[],
+): boolean {
   if (explicitNames.includes(name)) return true;
   return patterns.some((pattern) => pattern.test(name));
 }
@@ -117,7 +121,7 @@ function shouldIgnore(name: string, patterns: RegExp[], explicitNames: string[])
  */
 function compareParams(
   paramsA: readonly { name: string; type?: string }[],
-  paramsB: readonly { name: string; type?: string }[]
+  paramsB: readonly { name: string; type?: string }[],
 ): number {
   if (paramsA.length === 0 && paramsB.length === 0) return 1;
   if (paramsA.length !== paramsB.length) return 0;
@@ -183,22 +187,26 @@ export class SimilarFunctionsLinter extends BaseLinter {
     "similar-functions/similar-name-high": {
       category: "maintainability",
       impact: "major",
-      description: "Two functions have very similar names (85%+ match), indicating likely duplicate code that should be consolidated.",
+      description:
+        "Two functions have very similar names (85%+ match), indicating likely duplicate code that should be consolidated.",
     },
     "similar-functions/similar-name-medium": {
       category: "maintainability",
       impact: "minor",
-      description: "Two functions have similar names (70-85% match). Review to ensure they serve distinct purposes.",
+      description:
+        "Two functions have similar names (70-85% match). Review to ensure they serve distinct purposes.",
     },
     "similar-functions/duplicate-function": {
       category: "maintainability",
       impact: "critical",
-      description: "The same function exists in multiple files with identical signatures. This is duplicate code that should be consolidated.",
+      description:
+        "The same function exists in multiple files with identical signatures. This is duplicate code that should be consolidated.",
     },
     "similar-functions/same-name-different-params": {
       category: "consistency",
       impact: "major",
-      description: "The same function name exists in multiple files with different signatures. This is confusing and error-prone.",
+      description:
+        "The same function name exists in multiple files with different signatures. This is confusing and error-prone.",
     },
   };
 
@@ -219,7 +227,13 @@ export class SimilarFunctionsLinter extends BaseLinter {
       if (func.name.length < (options.minNameLength ?? 3)) return false;
 
       // Must not match ignore patterns or explicit ignore list
-      if (shouldIgnore(func.name, options.ignorePatterns ?? [], options.ignoreFunctions ?? [])) return false;
+      if (
+        shouldIgnore(
+          func.name,
+          options.ignorePatterns ?? [],
+          options.ignoreFunctions ?? [],
+        )
+      ) return false;
 
       // Must meet minimum line count
       const lines = func.body.split("\n").length;
@@ -228,7 +242,29 @@ export class SimilarFunctionsLinter extends BaseLinter {
       return true;
     });
 
-    // Compare all pairs
+    // Same-name functions are reported once per group, not once per pair.
+    //
+    // The pairwise form emitted one finding for every pair, so nine linter
+    // classes each implementing `lint` produced thirty-six findings for one
+    // fact, and the same file and line appeared eight times in a single run.
+    // A reader cannot act on the fifth copy of a finding, and the count stops
+    // meaning anything.
+    const byName = new Map<string, FunctionInfo[]>();
+    for (const fn of functions) {
+      const group = byName.get(fn.name);
+      if (group) group.push(fn);
+      else byName.set(fn.name, [fn]);
+    }
+
+    const sameName = new Set<FunctionInfo>();
+    for (const group of byName.values()) {
+      if (group.length < 2) continue;
+      for (const fn of group) sameName.add(fn);
+      for (const issue of this.checkSameNameGroup(group)) issues.push(issue);
+    }
+
+    // Everything else still compares pairwise, because a similarity score is a
+    // property of a pair and has no group form.
     const checked = new Set<string>();
 
     for (let i = 0; i < functions.length; i++) {
@@ -236,7 +272,8 @@ export class SimilarFunctionsLinter extends BaseLinter {
         const funcA = functions[i]!;
         const funcB = functions[j]!;
 
-        // Create a unique key for this pair to avoid duplicates
+        if (funcA.name === funcB.name) continue;
+
         const pairKey = [
           `${funcA.location.file}:${funcA.location.line}:${funcA.name}`,
           `${funcB.location.file}:${funcB.location.line}:${funcB.name}`,
@@ -246,8 +283,7 @@ export class SimilarFunctionsLinter extends BaseLinter {
         checked.add(pairKey);
 
         // Skip if in the same file (likely intentional overloads or related functions)
-        // Unless they have the exact same name
-        if (funcA.location.file === funcB.location.file && funcA.name !== funcB.name) {
+        if (funcA.location.file === funcB.location.file) {
           continue;
         }
 
@@ -262,14 +298,73 @@ export class SimilarFunctionsLinter extends BaseLinter {
   }
 
   /**
+   * One finding per set of same-named functions, split by whether their
+   * signatures agree.
+   */
+  private checkSameNameGroup(group: readonly FunctionInfo[]): Issue[] {
+    const first = group[0]!;
+    const identical = group.filter((f) =>
+      compareParams(first.params, f.params) === 1
+    );
+    const differing = group.filter((f) =>
+      compareParams(first.params, f.params) !== 1
+    );
+    const out: Issue[] = [];
+
+    if (identical.length > 1) {
+      out.push(this.issue(
+        "similar-functions/duplicate-function",
+        first.location,
+        `Function "${first.name}" exists in ${identical.length} places with an identical ` +
+          `signature. This is likely duplicate code that should be consolidated.`,
+        {
+          relatedLocations: identical.slice(1).map((f) => f.location),
+          suggestion: `IMMEDIATE ACTION REQUIRED:\n` +
+            `1. Determine which is the canonical implementation\n` +
+            `2. Move to a shared location\n` +
+            `3. Update all imports to use the single source\n` +
+            `4. Delete the duplicates\n\n` +
+            `Locations:\n` +
+            identical.map((f) => `  - ${locationString(f)}`).join("\n"),
+          context: { count: identical.length },
+        },
+      ));
+    }
+
+    if (differing.length > 0) {
+      out.push(this.issue(
+        "similar-functions/same-name-different-params",
+        first.location,
+        `Function "${first.name}" exists in multiple files with DIFFERENT signatures. ` +
+          `This is confusing and error-prone.`,
+        {
+          relatedLocations: differing.map((f) => f.location),
+          suggestion: `IMMEDIATE ACTION REQUIRED:\n` +
+            `1. If they do the same thing: unify the signature\n` +
+            `2. If they do different things: rename one for clarity\n\n` +
+            `Signatures:\n` +
+            group.map((f) => `  ${formatSignature(f)} at ${locationString(f)}`)
+              .join("\n"),
+          context: { count: group.length },
+        },
+      ));
+    }
+
+    return out;
+  }
+
+  /**
    * Check a pair of functions for similarity.
    */
   private checkPair(
     funcA: FunctionInfo,
     funcB: FunctionInfo,
-    options: SimilarFunctionsOptions
+    options: SimilarFunctionsOptions,
   ): Issue | null {
-    const { similarity, level: _level, metrics } = compareIdentifiers(funcA.name, funcB.name);
+    const { similarity, level: _level, metrics } = compareIdentifiers(
+      funcA.name,
+      funcB.name,
+    );
 
     // Exact same name in different files
     if (funcA.name === funcB.name) {
@@ -299,8 +394,7 @@ export class SimilarFunctionsLinter extends BaseLinter {
           `This likely indicates duplicate code that should be consolidated.`,
         {
           relatedLocations: [funcB.location],
-          suggestion:
-            `Consider:\n` +
+          suggestion: `Consider:\n` +
             `1. If these do the same thing: consolidate into one function\n` +
             `2. If they do different things: rename to clarify the distinction\n` +
             `3. If they share logic: extract common code to a helper\n\n` +
@@ -312,7 +406,7 @@ export class SimilarFunctionsLinter extends BaseLinter {
             funcB: formatSignature(funcB),
             metrics,
           },
-        }
+        },
       );
     }
 
@@ -323,8 +417,7 @@ export class SimilarFunctionsLinter extends BaseLinter {
         `Review to ensure they serve distinct purposes.`,
       {
         relatedLocations: [funcB.location],
-        suggestion:
-          `If these functions do related things, consider:\n` +
+        suggestion: `If these functions do related things, consider:\n` +
           `1. Consolidating them\n` +
           `2. Extracting shared logic\n` +
           `3. Renaming for clarity\n\n` +
@@ -335,7 +428,7 @@ export class SimilarFunctionsLinter extends BaseLinter {
           funcA: formatSignature(funcA),
           funcB: formatSignature(funcB),
         },
-      }
+      },
     );
   }
 
@@ -345,7 +438,7 @@ export class SimilarFunctionsLinter extends BaseLinter {
   private checkSameNameFunctions(
     funcA: FunctionInfo,
     funcB: FunctionInfo,
-    _options: SimilarFunctionsOptions
+    _options: SimilarFunctionsOptions,
   ): Issue | null {
     // Same name in different files is definitely suspicious
     const paramSimilarity = compareParams(funcA.params, funcB.params);
@@ -359,8 +452,7 @@ export class SimilarFunctionsLinter extends BaseLinter {
           `This is likely duplicate code that should be consolidated.`,
         {
           relatedLocations: [funcB.location],
-          suggestion:
-            `IMMEDIATE ACTION REQUIRED:\n` +
+          suggestion: `IMMEDIATE ACTION REQUIRED:\n` +
             `1. Determine which is the canonical implementation\n` +
             `2. Move to a shared location (packages/core/ or appropriate module)\n` +
             `3. Update all imports to use the single source\n` +
@@ -373,7 +465,7 @@ export class SimilarFunctionsLinter extends BaseLinter {
             funcB: formatSignature(funcB),
             paramSimilarity,
           },
-        }
+        },
       );
     } else {
       // Same name but different params - needs investigation
@@ -384,8 +476,7 @@ export class SimilarFunctionsLinter extends BaseLinter {
           `This is confusing and error-prone.`,
         {
           relatedLocations: [funcB.location],
-          suggestion:
-            `IMMEDIATE ACTION REQUIRED:\n` +
+          suggestion: `IMMEDIATE ACTION REQUIRED:\n` +
             `1. If they do the same thing: unify the signature\n` +
             `2. If they do different things: rename one for clarity\n` +
             `3. Consider if the difference is intentional (overload) or accidental\n\n` +
@@ -397,7 +488,7 @@ export class SimilarFunctionsLinter extends BaseLinter {
             funcB: formatSignature(funcB),
             paramSimilarity,
           },
-        }
+        },
       );
     }
   }
@@ -406,4 +497,5 @@ export class SimilarFunctionsLinter extends BaseLinter {
 /**
  * Default instance for registration.
  */
-export const similarFunctionsLinter: SimilarFunctionsLinter = new SimilarFunctionsLinter();
+export const similarFunctionsLinter: SimilarFunctionsLinter =
+  new SimilarFunctionsLinter();

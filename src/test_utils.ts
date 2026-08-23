@@ -9,19 +9,19 @@
 
 import { assert } from "@std/assert";
 import type {
-    FileInfo,
-    BaseLinter,
-    CodebaseData,
-    ExportInfo,
-    FunctionInfo,
-    FunctionParam,
-    ImportInfo,
-    LinterConfig,
-    SchemaInfo,
-    SourceLocation,
-    StringLiteral,
-    TypeField,
-    TypeInfo,
+  BaseLinter,
+  CodebaseData,
+  ExportInfo,
+  FileInfo,
+  FunctionInfo,
+  FunctionParam,
+  ImportInfo,
+  LinterConfig,
+  SchemaInfo,
+  SourceLocation,
+  StringLiteral,
+  TypeField,
+  TypeInfo,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -31,7 +31,11 @@ import type {
 /**
  * Create a source location.
  */
-export function loc(file: string, line: number, column?: number): SourceLocation {
+export function loc(
+  file: string,
+  line: number,
+  column?: number,
+): SourceLocation {
   return { file, line, column };
 }
 
@@ -80,7 +84,8 @@ export function mockFunction(opts: MockFunctionOptions = {}): FunctionInfo {
   console.log("Executing ${name}");
   return result;
 }`;
-  const normalizedBody = opts.normalizedBody ?? body.replace(/\s+/g, " ").trim();
+  const normalizedBody = opts.normalizedBody ??
+    body.replace(/\s+/g, " ").trim();
 
   return {
     name,
@@ -108,7 +113,7 @@ export function mockParam(
   type?: string,
   optional = false,
   rest = false,
-  defaultValue?: string
+  defaultValue?: string,
 ): FunctionParam {
   return { name, type, optional, rest, defaultValue };
 }
@@ -142,7 +147,8 @@ export interface MockTypeOptions {
 export function mockType(opts: MockTypeOptions = {}): TypeInfo {
   const name = opts.name ?? "TestType";
   const body = opts.body ?? `{ value: string }`;
-  const normalizedBody = opts.normalizedBody ?? body.replace(/\s+/g, " ").trim();
+  const normalizedBody = opts.normalizedBody ??
+    body.replace(/\s+/g, " ").trim();
 
   return {
     name,
@@ -168,7 +174,7 @@ export function mockField(
   type: string,
   optional = false,
   readonly = false,
-  jsDoc?: string
+  jsDoc?: string,
 ): TypeField {
   return { name, type, optional, readonly, jsDoc };
 }
@@ -377,7 +383,7 @@ export function mockCodebase(opts: MockCodebaseOptions = {}): CodebaseData {
  */
 export const defaultConfig: LinterConfig = {
   enabled: true,
-  
+
   options: {},
 };
 
@@ -387,7 +393,7 @@ export const defaultConfig: LinterConfig = {
 export function runLinter(
   linter: BaseLinter,
   data: CodebaseData,
-  config: LinterConfig = defaultConfig
+  config: LinterConfig = defaultConfig,
 ) {
   return linter.lint(data, config);
 }
@@ -397,7 +403,7 @@ export function runLinter(
  */
 export function expectCodes(
   violations: { kind: string }[],
-  expectedCodes: string[]
+  expectedCodes: string[],
 ): void {
   const actualCodes = violations.map((v) => v.kind).sort();
   const expected = [...expectedCodes].sort();
@@ -406,7 +412,7 @@ export function expectCodes(
     throw new Error(
       `Expected ${expected.length} violations, got ${actualCodes.length}.\n` +
         `Expected: ${expected.join(", ")}\n` +
-        `Actual: ${actualCodes.join(", ")}`
+        `Actual: ${actualCodes.join(", ")}`,
     );
   }
 
@@ -415,7 +421,7 @@ export function expectCodes(
       throw new Error(
         `Violation code mismatch at index ${i}.\n` +
           `Expected: ${expected[i]}\n` +
-          `Actual: ${actualCodes[i]}`
+          `Actual: ${actualCodes[i]}`,
       );
     }
   }
@@ -428,7 +434,7 @@ export function expectNoViolations(violations: unknown[]): void {
   if (violations.length > 0) {
     throw new Error(
       `Expected no violations, got ${violations.length}:\n` +
-        JSON.stringify(violations, null, 2)
+        JSON.stringify(violations, null, 2),
     );
   }
 }
@@ -438,11 +444,11 @@ export function expectNoViolations(violations: unknown[]): void {
  */
 export function expectViolations(
   violations: unknown[],
-  minCount = 1
+  minCount = 1,
 ): void {
   if (violations.length < minCount) {
     throw new Error(
-      `Expected at least ${minCount} violation(s), got ${violations.length}`
+      `Expected at least ${minCount} violation(s), got ${violations.length}`,
     );
   }
 }

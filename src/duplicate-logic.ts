@@ -9,19 +9,19 @@
  */
 
 import {
-    BaseLinter,
-    type CodebaseData,
-    compareCodeBodies,
-    type FunctionInfo,
-    hashCodeBody,
-    type Issue,
-    type IssueCatalog,
-    type LinterConfig,
-    type LinterDataRequirements,
-    type LinterMeta,
-    normalizeCode,
-    type SimilarityLevel,
-    type SourceLocation,
+  BaseLinter,
+  type CodebaseData,
+  compareCodeBodies,
+  type FunctionInfo,
+  hashCodeBody,
+  type Issue,
+  type IssueCatalog,
+  type LinterConfig,
+  type LinterDataRequirements,
+  type LinterMeta,
+  normalizeCode,
+  type SimilarityLevel,
+  type SourceLocation,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -72,10 +72,10 @@ interface DuplicateLogicOptions {
   /**
    * Explicit list of function names to ignore. Use this as an escape hatch for
    * functions that are intentionally similar by design.
-   * 
+   *
    * Unlike patterns, this requires you to explicitly list each function,
    * forcing you to think about whether the similarity is truly intentional.
-   * 
+   *
    * @default []
    * @example ["impactCond", "categoryCond", "fileCond"]
    */
@@ -157,12 +157,14 @@ export class DuplicateLogicLinter extends BaseLinter {
     "duplicate-logic/exact-duplicate": {
       category: "maintainability",
       impact: "critical",
-      description: "Two functions have identical implementations. Consider extracting to a shared function.",
+      description:
+        "Two functions have identical implementations. Consider extracting to a shared function.",
     },
     "duplicate-logic/similar-implementation": {
       category: "maintainability",
       impact: "major",
-      description: "Two functions have very similar implementations. Consider consolidating.",
+      description:
+        "Two functions have very similar implementations. Consider consolidating.",
     },
   };
 
@@ -222,7 +224,7 @@ export class DuplicateLogicLinter extends BaseLinter {
    */
   private prepareFunctions(
     data: CodebaseData,
-    opts: Required<DuplicateLogicOptions>
+    opts: Required<DuplicateLogicOptions>,
   ): FunctionWithMeta[] {
     const functions: FunctionWithMeta[] = [];
 
@@ -258,7 +260,7 @@ export class DuplicateLogicLinter extends BaseLinter {
    */
   private shouldCheck(
     func: FunctionInfo,
-    opts: Required<DuplicateLogicOptions>
+    opts: Required<DuplicateLogicOptions>,
   ): boolean {
     // Skip explicitly ignored function names
     if (func.name && opts.ignoreFunctions.includes(func.name)) {
@@ -266,7 +268,9 @@ export class DuplicateLogicLinter extends BaseLinter {
     }
 
     // Skip function names matching ignore patterns
-    if (func.name && opts.ignoreFunctionPatterns.some((p) => p.test(func.name))) {
+    if (
+      func.name && opts.ignoreFunctionPatterns.some((p) => p.test(func.name))
+    ) {
       return false;
     }
 
@@ -299,7 +303,7 @@ export class DuplicateLogicLinter extends BaseLinter {
    */
   private findDuplicates(
     functions: FunctionWithMeta[],
-    opts: Required<DuplicateLogicOptions>
+    opts: Required<DuplicateLogicOptions>,
   ): DuplicatePair[] {
     const pairs: DuplicatePair[] = [];
     const seenPairs = new Set<string>();
@@ -341,8 +345,16 @@ export class DuplicateLogicLinter extends BaseLinter {
     // Find near-duplicates using structural comparison
     // This is O(n²) but we limit to maxPairs and filter aggressively
     if (pairs.length < opts.maxPairs) {
-      for (let i = 0; i < functions.length && pairs.length < opts.maxPairs; i++) {
-        for (let j = i + 1; j < functions.length && pairs.length < opts.maxPairs; j++) {
+      for (
+        let i = 0;
+        i < functions.length && pairs.length < opts.maxPairs;
+        i++
+      ) {
+        for (
+          let j = i + 1;
+          j < functions.length && pairs.length < opts.maxPairs;
+          j++
+        ) {
           const func1 = functions[i]!;
           const func2 = functions[j]!;
 
@@ -355,7 +367,7 @@ export class DuplicateLogicLinter extends BaseLinter {
           // Compare bodies
           const { similarity, level } = compareCodeBodies(
             func1.normalized,
-            func2.normalized
+            func2.normalized,
           );
 
           if (similarity >= opts.similarityThreshold) {
@@ -384,7 +396,7 @@ export class DuplicateLogicLinter extends BaseLinter {
   private shouldCompare(
     func1: FunctionWithMeta,
     func2: FunctionWithMeta,
-    opts: Required<DuplicateLogicOptions>
+    opts: Required<DuplicateLogicOptions>,
   ): boolean {
     // Don't compare function to itself
     if (
@@ -421,7 +433,7 @@ export class DuplicateLogicLinter extends BaseLinter {
    */
   private pairToIssue(
     pair: DuplicatePair,
-    opts: Required<DuplicateLogicOptions>
+    opts: Required<DuplicateLogicOptions>,
   ): Issue {
     const { func1, func2, similarity, isExact } = pair;
     const similarityPct = Math.round(similarity * 100);
@@ -448,7 +460,7 @@ export class DuplicateLogicLinter extends BaseLinter {
             file1: func1.location.file,
             file2: func2.location.file,
           },
-        }
+        },
       );
     }
 
@@ -468,7 +480,7 @@ export class DuplicateLogicLinter extends BaseLinter {
           file1: func1.location.file,
           file2: func2.location.file,
         },
-      }
+      },
     );
   }
 }
@@ -476,4 +488,5 @@ export class DuplicateLogicLinter extends BaseLinter {
 /**
  * Default instance for registration.
  */
-export const duplicateLogicLinter: DuplicateLogicLinter = new DuplicateLogicLinter();
+export const duplicateLogicLinter: DuplicateLogicLinter =
+  new DuplicateLogicLinter();

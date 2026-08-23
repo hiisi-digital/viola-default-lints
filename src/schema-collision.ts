@@ -9,16 +9,16 @@
  */
 
 import {
-    BaseLinter,
-    type CodebaseData,
-    type Issue,
-    type IssueCatalog,
-    type LinterConfig,
-    type LinterDataRequirements,
-    type LinterMeta,
-    type SchemaInfo,
-    type SourceLocation,
-    type TypeInfo,
+  BaseLinter,
+  type CodebaseData,
+  type Issue,
+  type IssueCatalog,
+  type LinterConfig,
+  type LinterDataRequirements,
+  type LinterMeta,
+  type SchemaInfo,
+  type SourceLocation,
+  type TypeInfo,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -125,17 +125,20 @@ export class SchemaCollisionLinter extends BaseLinter {
     "schema-collision/exact-name-collision": {
       category: "correctness",
       impact: "critical",
-      description: "Type has the same name as a schema, violating schema-first workflow",
+      description:
+        "Type has the same name as a schema, violating schema-first workflow",
     },
     "schema-collision/case-insensitive-collision": {
       category: "consistency",
       impact: "major",
-      description: "Type differs from schema only by case, causing potential confusion",
+      description:
+        "Type differs from schema only by case, causing potential confusion",
     },
     "schema-collision/variant-name-collision": {
       category: "maintainability",
       impact: "minor",
-      description: "Type appears to be a variant of a schema name, indicating potential duplicate definitions",
+      description:
+        "Type appears to be a variant of a schema name, indicating potential duplicate definitions",
     },
   };
 
@@ -199,7 +202,7 @@ export class SchemaCollisionLinter extends BaseLinter {
           schemasByName,
           schemasByLowerName,
           schemaVariants,
-          opts
+          opts,
         );
 
         for (const collision of collisions) {
@@ -231,8 +234,10 @@ export class SchemaCollisionLinter extends BaseLinter {
         ...DEFAULT_OPTIONS.allowedFilePatterns,
         ...(userOpts.allowedFilePatterns ?? []),
       ],
-      variantSuffixes: userOpts.variantSuffixes ?? DEFAULT_OPTIONS.variantSuffixes,
-      variantPrefixes: userOpts.variantPrefixes ?? DEFAULT_OPTIONS.variantPrefixes,
+      variantSuffixes: userOpts.variantSuffixes ??
+        DEFAULT_OPTIONS.variantSuffixes,
+      variantPrefixes: userOpts.variantPrefixes ??
+        DEFAULT_OPTIONS.variantPrefixes,
     };
   }
 
@@ -241,7 +246,7 @@ export class SchemaCollisionLinter extends BaseLinter {
    */
   private shouldIgnoreSchema(
     name: string,
-    opts: Required<SchemaCollisionOptions>
+    opts: Required<SchemaCollisionOptions>,
   ): boolean {
     return opts.ignoreSchemaPatterns.some((p) => p.test(name));
   }
@@ -251,7 +256,7 @@ export class SchemaCollisionLinter extends BaseLinter {
    */
   private shouldIgnoreType(
     name: string,
-    opts: Required<SchemaCollisionOptions>
+    opts: Required<SchemaCollisionOptions>,
   ): boolean {
     return opts.ignoreTypePatterns.some((p) => p.test(name));
   }
@@ -261,7 +266,7 @@ export class SchemaCollisionLinter extends BaseLinter {
    */
   private isAllowedFile(
     path: string,
-    opts: Required<SchemaCollisionOptions>
+    opts: Required<SchemaCollisionOptions>,
   ): boolean {
     return opts.allowedFilePatterns.some((p) => p.test(path));
   }
@@ -273,7 +278,7 @@ export class SchemaCollisionLinter extends BaseLinter {
    */
   private generateVariants(
     name: string,
-    opts: Required<SchemaCollisionOptions>
+    opts: Required<SchemaCollisionOptions>,
   ): string[] {
     const variants: string[] = [];
 
@@ -305,7 +310,7 @@ export class SchemaCollisionLinter extends BaseLinter {
     schemasByName: Map<string, SchemaInfo>,
     schemasByLowerName: Map<string, SchemaInfo>,
     schemaVariants: Map<string, SchemaInfo>,
-    opts: Required<SchemaCollisionOptions>
+    opts: Required<SchemaCollisionOptions>,
   ): CollisionInfo[] {
     const collisions: CollisionInfo[] = [];
     const typeName = type.name;
@@ -403,7 +408,7 @@ export class SchemaCollisionLinter extends BaseLinter {
               schemaFile: schema.file,
               typeFile: type.location.file,
             },
-          }
+          },
         );
 
       case "case-insensitive":
@@ -422,7 +427,7 @@ export class SchemaCollisionLinter extends BaseLinter {
               schemaName: schema.name,
               schemaFile: schema.file,
             },
-          }
+          },
         );
 
       case "variant":
@@ -430,7 +435,9 @@ export class SchemaCollisionLinter extends BaseLinter {
           "schema-collision/variant-name-collision",
           type.location,
           `Type "${type.name}" appears to be a variant of schema "${schema.name}" ` +
-            `(${variantKind ?? "naming pattern"}). This may indicate duplicate definitions.`,
+            `(${
+              variantKind ?? "naming pattern"
+            }). This may indicate duplicate definitions.`,
           {
             relatedLocations: [schemaLocation],
             suggestion:
@@ -443,7 +450,7 @@ export class SchemaCollisionLinter extends BaseLinter {
               schemaFile: schema.file,
               variantKind,
             },
-          }
+          },
         );
     }
   }
@@ -452,4 +459,5 @@ export class SchemaCollisionLinter extends BaseLinter {
 /**
  * Default instance for registration.
  */
-export const schemaCollisionLinter: SchemaCollisionLinter = new SchemaCollisionLinter();
+export const schemaCollisionLinter: SchemaCollisionLinter =
+  new SchemaCollisionLinter();

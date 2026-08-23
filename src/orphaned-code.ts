@@ -12,16 +12,16 @@
  */
 
 import {
-    BaseLinter,
-    type CodebaseData,
-    type ExportInfo,
-    type ImportInfo,
-    Issue,
-    type IssueCatalog,
-    type LinterConfig,
-    type LinterDataRequirements,
-    type LinterMeta,
-    type SourceLocation,
+  BaseLinter,
+  type CodebaseData,
+  type ExportInfo,
+  type ImportInfo,
+  Issue,
+  type IssueCatalog,
+  type LinterConfig,
+  type LinterDataRequirements,
+  type LinterMeta,
+  type SourceLocation,
 } from "@hiisi/viola";
 
 // =============================================================================
@@ -94,10 +94,10 @@ interface OrphanedCodeOptions {
    * are intentionally part of the public API. Use this as an escape hatch
    * when you have utility modules that are re-exported but the linter
    * can't track the re-export chain.
-   * 
+   *
    * Unlike patterns, this requires you to explicitly list each file,
    * forcing you to think about whether it truly belongs in the public API.
-   * 
+   *
    * @default []
    * @example ["src/utils/hash.ts", "src/utils/similarity.ts"]
    */
@@ -211,7 +211,12 @@ export class OrphanedCodeLinter extends BaseLinter {
     const allImports = this.collectImports(data, opts);
 
     // Build a set of used export keys
-    const usedExports = this.findUsedExports(allExports, allImports, data, opts);
+    const usedExports = this.findUsedExports(
+      allExports,
+      allImports,
+      data,
+      opts,
+    );
 
     // Find orphaned exports
     for (const resolved of allExports) {
@@ -268,7 +273,7 @@ export class OrphanedCodeLinter extends BaseLinter {
    */
   private collectExports(
     data: CodebaseData,
-    opts: Required<OrphanedCodeOptions>
+    opts: Required<OrphanedCodeOptions>,
   ): ResolvedExport[] {
     const exports: ResolvedExport[] = [];
 
@@ -299,7 +304,7 @@ export class OrphanedCodeLinter extends BaseLinter {
    */
   private collectImports(
     data: CodebaseData,
-    opts: Required<OrphanedCodeOptions>
+    opts: Required<OrphanedCodeOptions>,
   ): ResolvedImport[] {
     const imports: ResolvedImport[] = [];
 
@@ -328,7 +333,7 @@ export class OrphanedCodeLinter extends BaseLinter {
     allExports: ResolvedExport[],
     allImports: ResolvedImport[],
     data: CodebaseData,
-    opts: Required<OrphanedCodeOptions>
+    opts: Required<OrphanedCodeOptions>,
   ): Set<string> {
     const used = new Set<string>();
 
@@ -370,7 +375,7 @@ export class OrphanedCodeLinter extends BaseLinter {
           const fromPath = this.resolveImportPath(
             exp.modulePath,
             exp.export.from,
-            data
+            data,
           );
           if (fromPath) {
             const sourceExports = exportsByModule.get(fromPath);
@@ -395,7 +400,7 @@ export class OrphanedCodeLinter extends BaseLinter {
    */
   private shouldCheckExport(
     exp: ExportInfo,
-    opts: Required<OrphanedCodeOptions>
+    opts: Required<OrphanedCodeOptions>,
   ): boolean {
     // Skip default exports if not checking them
     if (exp.name === "default" && !opts.checkDefaultExports) {
@@ -424,7 +429,7 @@ export class OrphanedCodeLinter extends BaseLinter {
    */
   private shouldReport(
     resolved: ResolvedExport,
-    opts: Required<OrphanedCodeOptions>
+    opts: Required<OrphanedCodeOptions>,
   ): boolean {
     // Don't report exports from entry points
     if (opts.entryPointPatterns.some((p) => p.test(resolved.modulePath))) {
@@ -435,10 +440,12 @@ export class OrphanedCodeLinter extends BaseLinter {
     // Note: we check both normalized path and with .ts extension
     const normalizedPath = resolved.modulePath;
     const pathWithExt = normalizedPath + ".ts";
-    if (opts.publicApiFiles.some((f) => {
-      const normalizedFile = f.replace(/\.tsx?$/, "");
-      return normalizedFile === normalizedPath || f === pathWithExt;
-    })) {
+    if (
+      opts.publicApiFiles.some((f) => {
+        const normalizedFile = f.replace(/\.tsx?$/, "");
+        return normalizedFile === normalizedPath || f === pathWithExt;
+      })
+    ) {
       return false;
     }
 
@@ -455,7 +462,7 @@ export class OrphanedCodeLinter extends BaseLinter {
    */
   private isExternalImport(
     from: string,
-    opts: Required<OrphanedCodeOptions>
+    opts: Required<OrphanedCodeOptions>,
   ): boolean {
     return opts.externalPatterns.some((p) => p.test(from));
   }
@@ -497,7 +504,7 @@ export class OrphanedCodeLinter extends BaseLinter {
   private resolveImportPath(
     importerPath: string,
     importFrom: string,
-    data: CodebaseData
+    data: CodebaseData,
   ): string | null {
     // Skip non-relative imports (these should be external)
     if (!importFrom.startsWith("./") && !importFrom.startsWith("../")) {
@@ -516,7 +523,9 @@ export class OrphanedCodeLinter extends BaseLinter {
     // Resolve relative path
     // Get directory of importer (everything before the last /)
     const lastSlash = importerPath.lastIndexOf("/");
-    const importerDir = lastSlash >= 0 ? importerPath.substring(0, lastSlash) : "";
+    const importerDir = lastSlash >= 0
+      ? importerPath.substring(0, lastSlash)
+      : "";
     const segments = importerDir ? importerDir.split("/") : [];
     const importSegments = importFrom.split("/");
 
@@ -563,8 +572,7 @@ export class OrphanedCodeLinter extends BaseLinter {
       `Exported ${kind} "${exp.name}" is never imported anywhere in the codebase. ` +
         `This may be dead code.`,
       {
-        suggestion:
-          `Consider: (1) Remove the export if it's unused, ` +
+        suggestion: `Consider: (1) Remove the export if it's unused, ` +
           `(2) Remove the entire symbol if the code is dead, or ` +
           `(3) Add this file/export to entryPointPatterns if it's intentional public API.`,
         context: {
@@ -573,7 +581,7 @@ export class OrphanedCodeLinter extends BaseLinter {
           file: modulePath,
           isTypeOnly: exp.isTypeOnly,
         },
-      }
+      },
     );
   }
 }

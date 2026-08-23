@@ -6,14 +6,14 @@
 
 import { assertEquals } from "@std/assert";
 import {
-    defaultConfig,
-    expectCodes,
-    expectNoViolations,
-    first,
-    mockCodebase,
-    mockFile,
-    mockFunction,
-    mockType,
+  defaultConfig,
+  expectCodes,
+  expectNoViolations,
+  first,
+  mockCodebase,
+  mockFile,
+  mockFunction,
+  mockType,
 } from "./test_utils.ts";
 import { TypeLocationLinter } from "./type-location.ts";
 
@@ -80,7 +80,11 @@ Deno.test("type-location - reports non-exported types outside types dir too", ()
       mockFile({
         path: "packages/core/utils.ts",
         types: [
-          mockType({ name: "InternalHelper", isExported: false, file: "packages/core/utils.ts" }),
+          mockType({
+            name: "InternalHelper",
+            isExported: false,
+            file: "packages/core/utils.ts",
+          }),
         ],
       }),
     ],
@@ -101,7 +105,11 @@ Deno.test("type-location - reports types outside types directories", () => {
       mockFile({
         path: "packages/core/utils.ts",
         types: [
-          mockType({ name: "UtilType", isExported: true, file: "packages/core/utils.ts" }),
+          mockType({
+            name: "UtilType",
+            isExported: true,
+            file: "packages/core/utils.ts",
+          }),
         ],
       }),
     ],
@@ -118,8 +126,18 @@ Deno.test("type-location - reports multiple types in wrong location", () => {
       mockFile({
         path: "packages/server/handler.ts",
         types: [
-          mockType({ name: "Request", isExported: true, file: "packages/server/handler.ts", line: 10 }),
-          mockType({ name: "Response", isExported: true, file: "packages/server/handler.ts", line: 20 }),
+          mockType({
+            name: "Request",
+            isExported: true,
+            file: "packages/server/handler.ts",
+            line: 10,
+          }),
+          mockType({
+            name: "Response",
+            isExported: true,
+            file: "packages/server/handler.ts",
+            line: 20,
+          }),
         ],
       }),
     ],
@@ -127,7 +145,10 @@ Deno.test("type-location - reports multiple types in wrong location", () => {
 
   const violations = linter.lint(data, defaultConfig);
   assertEquals(violations.length, 2);
-  expectCodes(violations, ["type-location/type-outside-types", "type-location/type-outside-types"]);
+  expectCodes(violations, [
+    "type-location/type-outside-types",
+    "type-location/type-outside-types",
+  ]);
 });
 
 Deno.test("type-location - reports interface outside types directory", () => {
@@ -136,7 +157,12 @@ Deno.test("type-location - reports interface outside types directory", () => {
       mockFile({
         path: "packages/api/client.ts",
         types: [
-          mockType({ name: "ApiClient", kind: "interface", isExported: true, file: "packages/api/client.ts" }),
+          mockType({
+            name: "ApiClient",
+            kind: "interface",
+            isExported: true,
+            file: "packages/api/client.ts",
+          }),
         ],
       }),
     ],
@@ -157,7 +183,11 @@ Deno.test("type-location - reports functions in types/ directory", () => {
       mockFile({
         path: "packages/types/models.ts",
         functions: [
-          mockFunction({ name: "createUser", isExported: true, file: "packages/types/models.ts" }),
+          mockFunction({
+            name: "createUser",
+            isExported: true,
+            file: "packages/types/models.ts",
+          }),
         ],
         types: [
           mockType({ name: "User", isExported: true }),
@@ -217,7 +247,11 @@ Deno.test("type-location - types in test files are still flagged (linter doesnt 
       mockFile({
         path: "packages/core/utils_test.ts",
         types: [
-          mockType({ name: "TestHelper", isExported: true, file: "packages/core/utils_test.ts" }),
+          mockType({
+            name: "TestHelper",
+            isExported: true,
+            file: "packages/core/utils_test.ts",
+          }),
         ],
       }),
     ],
@@ -276,7 +310,11 @@ Deno.test("type-location - handles mixed valid and invalid locations", () => {
       mockFile({
         path: "packages/core/config.ts",
         types: [
-          mockType({ name: "BadConfig", isExported: true, file: "packages/core/config.ts" }),
+          mockType({
+            name: "BadConfig",
+            isExported: true,
+            file: "packages/core/config.ts",
+          }),
         ],
       }),
       mockFile({
@@ -326,7 +364,11 @@ Deno.test("type-location - violation has correct severity", () => {
       mockFile({
         path: "packages/core/bad.ts",
         types: [
-          mockType({ name: "BadType", isExported: true, file: "packages/core/bad.ts" }),
+          mockType({
+            name: "BadType",
+            isExported: true,
+            file: "packages/core/bad.ts",
+          }),
         ],
       }),
     ],
@@ -342,7 +384,11 @@ Deno.test("type-location - violation includes suggestion", () => {
       mockFile({
         path: "packages/core/bad.ts",
         types: [
-          mockType({ name: "BadType", isExported: true, file: "packages/core/bad.ts" }),
+          mockType({
+            name: "BadType",
+            isExported: true,
+            file: "packages/core/bad.ts",
+          }),
         ],
       }),
     ],
@@ -360,7 +406,11 @@ Deno.test("type-location - violation has correct linter name", () => {
       mockFile({
         path: "packages/core/bad.ts",
         types: [
-          mockType({ name: "BadType", isExported: true, file: "packages/core/bad.ts" }),
+          mockType({
+            name: "BadType",
+            isExported: true,
+            file: "packages/core/bad.ts",
+          }),
         ],
       }),
     ],

@@ -39,64 +39,55 @@
 // =============================================================================
 
 export {
-    DeprecationCheckLinter,
-    deprecationCheckLinter,
-    type DeprecationCheckOptions
+  DeprecationCheckLinter,
+  deprecationCheckLinter,
+  type DeprecationCheckOptions,
 } from "./src/deprecation-check.ts";
 
 export {
-    DuplicateLogicLinter,
-    duplicateLogicLinter
+  DuplicateLogicLinter,
+  duplicateLogicLinter,
 } from "./src/duplicate-logic.ts";
 
 export {
-    DuplicateStringsLinter,
-    duplicateStringsLinter,
-    type DuplicateStringsOptions
+  DuplicateStringsLinter,
+  duplicateStringsLinter,
+  type DuplicateStringsOptions,
 } from "./src/duplicate-strings.ts";
 
-export {
-    MissingDocsLinter,
-    missingDocsLinter
-} from "./src/missing-docs.ts";
+export { MissingDocsLinter, missingDocsLinter } from "./src/missing-docs.ts";
+
+export { OrphanedCodeLinter, orphanedCodeLinter } from "./src/orphaned-code.ts";
 
 export {
-    OrphanedCodeLinter,
-    orphanedCodeLinter
-} from "./src/orphaned-code.ts";
-
-export {
-    SchemaCollisionLinter,
-    schemaCollisionLinter
+  SchemaCollisionLinter,
+  schemaCollisionLinter,
 } from "./src/schema-collision.ts";
 
 export {
-    SimilarFunctionsLinter,
-    similarFunctionsLinter,
-    type SimilarFunctionsOptions
+  SimilarFunctionsLinter,
+  similarFunctionsLinter,
+  type SimilarFunctionsOptions,
 } from "./src/similar-functions.ts";
 
 export {
-    SimilarTypesLinter,
-    similarTypesLinter,
-    type SimilarTypesOptions
+  SimilarTypesLinter,
+  similarTypesLinter,
+  type SimilarTypesOptions,
 } from "./src/similar-types.ts";
 
-export {
-    TypeLocationLinter,
-    typeLocationLinter
-} from "./src/type-location.ts";
+export { TypeLocationLinter, typeLocationLinter } from "./src/type-location.ts";
 
 // =============================================================================
 // Plugin Implementation
 // =============================================================================
 
 import {
-    Impact,
-    report,
-    type ViolaBuilder,
-    type ViolaPlugin,
-    when
+  Impact,
+  report,
+  type ViolaBuilder,
+  type ViolaPlugin,
+  when,
 } from "@hiisi/viola";
 import { deprecationCheckLinter } from "./src/deprecation-check.ts";
 import { duplicateLogicLinter } from "./src/duplicate-logic.ts";
@@ -113,15 +104,15 @@ import { typeLocationLinter } from "./src/type-location.ts";
  * Use this if you want just linters without default rules.
  */
 export const linters = [
-    typeLocationLinter,
-    similarFunctionsLinter,
-    similarTypesLinter,
-    duplicateStringsLinter,
-    duplicateLogicLinter,
-    deprecationCheckLinter,
-    missingDocsLinter,
-    orphanedCodeLinter,
-    schemaCollisionLinter,
+  typeLocationLinter,
+  similarFunctionsLinter,
+  similarTypesLinter,
+  duplicateStringsLinter,
+  duplicateLogicLinter,
+  deprecationCheckLinter,
+  missingDocsLinter,
+  orphanedCodeLinter,
+  schemaCollisionLinter,
 ];
 
 /**
@@ -135,19 +126,19 @@ export const linters = [
  * Your rules defined after `.use(defaultLints)` override these (last wins).
  */
 const defaultLints: ViolaPlugin = {
-    build(viola: ViolaBuilder): void {
-        // Add all linters
-        for (const linter of linters) {
-            viola.add(linter);
-        }
-
-        // Default rules based on impact severity
-        // User rules after .use() override these (last wins)
-        viola
-            .rule(report.error, when.impact.atLeast(Impact.Major))
-            .rule(report.warn, when.impact.is(Impact.Minor))
-            .rule(report.info, when.impact.is(Impact.Trivial));
+  build(viola: ViolaBuilder): void {
+    // Add all linters
+    for (const linter of linters) {
+      viola.add(linter);
     }
+
+    // Default rules based on impact severity
+    // User rules after .use() override these (last wins)
+    viola
+      .rule(report.error, when.impact.atLeast(Impact.Major))
+      .rule(report.warn, when.impact.is(Impact.Minor))
+      .rule(report.info, when.impact.is(Impact.Trivial));
+  },
 };
 
 /**

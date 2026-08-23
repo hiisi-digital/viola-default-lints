@@ -8,12 +8,12 @@ import type { LinterConfig } from "@hiisi/viola";
 import { assertEquals } from "@std/assert";
 import { SimilarFunctionsLinter } from "./similar-functions.ts";
 import {
-    defaultConfig,
-    expectNoViolations,
-    first,
-    mockCodebase,
-    mockFile,
-    mockFunction
+  defaultConfig,
+  expectNoViolations,
+  first,
+  mockCodebase,
+  mockFile,
+  mockFunction,
 } from "./test_utils.ts";
 
 const linter = new SimilarFunctionsLinter();
@@ -54,13 +54,21 @@ Deno.test("similar-functions - reports functions with similar names (medium thre
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ name: "processUserData", file: "src/app.ts", line: 1 }),
+          mockFunction({
+            name: "processUserData",
+            file: "src/app.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         functions: [
-          mockFunction({ name: "processUserDatas", file: "src/utils.ts", line: 1 }),
+          mockFunction({
+            name: "processUserDatas",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -77,13 +85,21 @@ Deno.test("similar-functions - reports similar functions across files", () => {
       mockFile({
         path: "src/user.ts",
         functions: [
-          mockFunction({ name: "validateUserInput", file: "src/user.ts", line: 1 }),
+          mockFunction({
+            name: "validateUserInput",
+            file: "src/user.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
         path: "src/admin.ts",
         functions: [
-          mockFunction({ name: "validateUserInputs", file: "src/admin.ts", line: 1 }),
+          mockFunction({
+            name: "validateUserInputs",
+            file: "src/admin.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -100,13 +116,21 @@ Deno.test("similar-functions - identical names in different files produces high 
       mockFile({
         path: "src/user.ts",
         functions: [
-          mockFunction({ name: "validateRecord", file: "src/user.ts", line: 1 }),
+          mockFunction({
+            name: "validateRecord",
+            file: "src/user.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
         path: "src/order.ts",
         functions: [
-          mockFunction({ name: "validateRecord", file: "src/order.ts", line: 1 }),
+          mockFunction({
+            name: "validateRecord",
+            file: "src/order.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -129,7 +153,11 @@ Deno.test("similar-functions - does not report clearly different names", () => {
         functions: [
           mockFunction({ name: "authenticate", file: "src/app.ts", line: 1 }),
           mockFunction({ name: "sendEmail", file: "src/app.ts", line: 10 }),
-          mockFunction({ name: "calculateTotal", file: "src/app.ts", line: 20 }),
+          mockFunction({
+            name: "calculateTotal",
+            file: "src/app.ts",
+            line: 20,
+          }),
         ],
       }),
     ],
@@ -146,8 +174,16 @@ Deno.test("similar-functions - does not report common verb prefixes on different
         path: "src/api.ts",
         functions: [
           mockFunction({ name: "getUserProfile", file: "src/api.ts", line: 1 }),
-          mockFunction({ name: "getOrderStatus", file: "src/api.ts", line: 10 }),
-          mockFunction({ name: "getConfigValue", file: "src/api.ts", line: 20 }),
+          mockFunction({
+            name: "getOrderStatus",
+            file: "src/api.ts",
+            line: 10,
+          }),
+          mockFunction({
+            name: "getConfigValue",
+            file: "src/api.ts",
+            line: 20,
+          }),
         ],
       }),
     ],
@@ -167,8 +203,16 @@ Deno.test("similar-functions - ignores test files", () => {
       mockFile({
         path: "src/app_test.ts",
         functions: [
-          mockFunction({ name: "processUserData", file: "src/app_test.ts", line: 1 }),
-          mockFunction({ name: "processUserDatas", file: "src/app_test.ts", line: 10 }),
+          mockFunction({
+            name: "processUserData",
+            file: "src/app_test.ts",
+            line: 1,
+          }),
+          mockFunction({
+            name: "processUserDatas",
+            file: "src/app_test.ts",
+            line: 10,
+          }),
         ],
       }),
     ],
@@ -184,8 +228,16 @@ Deno.test("similar-functions - ignores spec files", () => {
       mockFile({
         path: "src/app.spec.ts",
         functions: [
-          mockFunction({ name: "processUserData", file: "src/app.spec.ts", line: 1 }),
-          mockFunction({ name: "processUserDatas", file: "src/app.spec.ts", line: 10 }),
+          mockFunction({
+            name: "processUserData",
+            file: "src/app.spec.ts",
+            line: 1,
+          }),
+          mockFunction({
+            name: "processUserDatas",
+            file: "src/app.spec.ts",
+            line: 10,
+          }),
         ],
       }),
     ],
@@ -201,8 +253,16 @@ Deno.test("similar-functions - ignores files in tests/ directory", () => {
       mockFile({
         path: "tests/helpers/setup.ts",
         functions: [
-          mockFunction({ name: "processUserData", file: "tests/helpers/setup.ts", line: 1 }),
-          mockFunction({ name: "processUserDatas", file: "tests/helpers/setup.ts", line: 10 }),
+          mockFunction({
+            name: "processUserData",
+            file: "tests/helpers/setup.ts",
+            line: 1,
+          }),
+          mockFunction({
+            name: "processUserDatas",
+            file: "tests/helpers/setup.ts",
+            line: 10,
+          }),
         ],
       }),
     ],
@@ -244,13 +304,21 @@ Deno.test("similar-functions - violation has correct severity", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ name: "processUserData", file: "src/app.ts", line: 1 }),
+          mockFunction({
+            name: "processUserData",
+            file: "src/app.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         functions: [
-          mockFunction({ name: "processUserDatas", file: "src/utils.ts", line: 1 }),
+          mockFunction({
+            name: "processUserDatas",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -267,13 +335,21 @@ Deno.test("similar-functions - violation includes related locations", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ name: "processUserData", file: "src/app.ts", line: 1 }),
+          mockFunction({
+            name: "processUserData",
+            file: "src/app.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         functions: [
-          mockFunction({ name: "processUserDatas", file: "src/utils.ts", line: 1 }),
+          mockFunction({
+            name: "processUserDatas",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -292,13 +368,21 @@ Deno.test("similar-functions - violation includes suggestion", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ name: "processUserData", file: "src/app.ts", line: 1 }),
+          mockFunction({
+            name: "processUserData",
+            file: "src/app.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         functions: [
-          mockFunction({ name: "processUserDatas", file: "src/utils.ts", line: 1 }),
+          mockFunction({
+            name: "processUserDatas",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -317,13 +401,21 @@ Deno.test("similar-functions - violation has correct linter name", () => {
       mockFile({
         path: "src/app.ts",
         functions: [
-          mockFunction({ name: "processUserData", file: "src/app.ts", line: 1 }),
+          mockFunction({
+            name: "processUserData",
+            file: "src/app.ts",
+            line: 1,
+          }),
         ],
       }),
       mockFile({
         path: "src/utils.ts",
         functions: [
-          mockFunction({ name: "processUserDatas", file: "src/utils.ts", line: 1 }),
+          mockFunction({
+            name: "processUserDatas",
+            file: "src/utils.ts",
+            line: 1,
+          }),
         ],
       }),
     ],
@@ -404,4 +496,44 @@ Deno.test("similar-functions - configurable similarity threshold", () => {
   // With lower threshold (0.5), they should match
   const lowThresholdViolations = linter.lint(data, lowThresholdConfig);
   assertEquals(lowThresholdViolations.length, 1);
+});
+
+Deno.test("similar-functions - a name shared by many is one finding, not one per pair", () => {
+  // The pairwise form emitted a finding for every pair, so nine classes each
+  // implementing `lint` produced thirty-six findings for one fact and repeated
+  // the same file and line eight times in a single run. A reader cannot act on
+  // the fifth copy, and the count stops meaning anything.
+  const linter = new SimilarFunctionsLinter();
+  const data = mockCodebase({
+    files: Array.from({ length: 5 }, (_, i) =>
+      mockFile({
+        path: `src/lint${i}.ts`,
+        functions: [
+          mockFunction({ name: "lint", file: `src/lint${i}.ts`, line: 1 }),
+        ],
+      })),
+  });
+
+  const violations = linter.lint(data, defaultConfig);
+  assertEquals(violations.length, 1);
+  assertEquals(first(violations).kind, "similar-functions/duplicate-function");
+  // and it names the other four rather than hiding them
+  assertEquals(first(violations).relatedLocations?.length, 4);
+});
+
+Deno.test("similar-functions - the group finding still fires for two", () => {
+  const linter = new SimilarFunctionsLinter();
+  const data = mockCodebase({
+    files: [
+      mockFile({
+        path: "src/a.ts",
+        functions: [mockFunction({ name: "run", file: "src/a.ts", line: 1 })],
+      }),
+      mockFile({
+        path: "src/b.ts",
+        functions: [mockFunction({ name: "run", file: "src/b.ts", line: 1 })],
+      }),
+    ],
+  });
+  assertEquals(linter.lint(data, defaultConfig).length, 1);
 });
