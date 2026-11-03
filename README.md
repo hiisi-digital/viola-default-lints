@@ -1,37 +1,16 @@
 # `viola-default-lints`
 
-<div align="center" style="text-align: center;">
-
 [![JSR](https://jsr.io/badges/@hiisi/viola-default-lints)](https://jsr.io/@hiisi/viola-default-lints)
-[![GitHub Issues](https://img.shields.io/github/issues/hiisi-digital/viola-default-lints.svg)](https://github.com/hiisi-digital/viola-default-lints/issues)
-![License](https://img.shields.io/github/license/hiisi-digital/viola-default-lints?color=%23009689)
 
 > Default linters and rules for the viola convention linter.
 
-</div>
+A set of opinionated convention linters for the [viola](https://jsr.io/@hiisi/viola) runtime, covering code duplication, naming, documentation gaps and file organization. They come with default rules that classify issues by impact, where critical and major are errors, minor is a warning and trivial is info.
 
-## What it does
-
-This package provides a set of opinionated convention linters that work with the
-[viola](https://jsr.io/@hiisi/viola) runtime. These linters check for common
-issues like code duplication, naming conventions, documentation gaps, and file
-organization problems.
-
-The plugin includes default rules that classify issues by impact:
-
-- Critical/Major impact → error
-- Minor impact → warn
-- Trivial impact → info
-
-## Installation
+## Usage
 
 ```bash
 deno add jsr:@hiisi/viola jsr:@hiisi/viola-default-lints
 ```
-
-## Usage
-
-Create a `viola.config.ts`:
 
 ```ts
 import { report, viola, when } from "@hiisi/viola";
@@ -39,108 +18,22 @@ import defaultLints from "@hiisi/viola-default-lints";
 
 export default viola()
   .use(defaultLints) // adds linters + default rules
+  .set("similar-functions.minSimilarity", 0.8)
   .rule(report.off, when.in("**/*_test.ts")); // your overrides
 ```
 
-Run with CLI:
+Rules are "last wins" like CSS, and yours come after the plugin's, so they take precedence. To take the linters without the default rules, import `linters` and `.add(linters)`, and to take single ones, import them by name, such as `similarFunctionsLinter` and `typeLocationLinter`, and add each.
 
-```bash
-deno run -A jsr:@hiisi/viola-cli
-```
+The linters are `type-location`, which wants types in `types/` directories and logic out of types-only packages, `similar-functions` and `similar-types` for similar names and identical field structures, `duplicate-strings` and `duplicate-logic` for repeated literals and similar implementations, `deprecation-check` for `@deprecated` annotations and removal markers, `missing-docs` for exports without documentation, `orphaned-code` for exports nobody imports, and `schema-collision` for naming conflicts between schemas and types.
 
-Rules use **"last wins" semantics** (like CSS). Your rules come after plugin
-rules, so they take precedence.
+## Known issues
 
-### Without Default Rules
-
-If you want just the linters without any default rules:
-
-```ts
-import { Impact, report, viola, when } from "@hiisi/viola";
-import { linters } from "@hiisi/viola-default-lints";
-
-export default viola()
-  .add(linters) // just linters, no default rules
-  .rule(report.error, when.impact.atLeast(Impact.Critical))
-  .rule(report.warn, when.impact.atLeast(Impact.Major));
-```
-
-### Configure Linter Settings
-
-```ts
-import { report, viola, when } from "@hiisi/viola";
-import defaultLints from "@hiisi/viola-default-lints";
-
-export default viola()
-  .use(defaultLints)
-  .set("similar-functions.minSimilarity", 0.8)
-  .set("duplicate-strings.minLength", 10)
-  .rule(report.off, when.in("**/*_test.ts"));
-```
-
-### Import Individual Linters
-
-```ts
-import { Impact, report, viola, when } from "@hiisi/viola";
-import {
-  similarFunctionsLinter,
-  typeLocationLinter,
-} from "@hiisi/viola-default-lints";
-
-export default viola()
-  .add(typeLocationLinter)
-  .add(similarFunctionsLinter)
-  .rule(report.error, when.impact.atLeast(Impact.Major));
-```
-
-## Available Linters
-
-| Linter              | Description                                                                           |
-| ------------------- | ------------------------------------------------------------------------------------- |
-| `type-location`     | Types must be in `types/` directories, and logic must stay out of types-only packages |
-| `similar-functions` | Detect similar function names                                                         |
-| `similar-types`     | Detect similar type names and identical field structures                              |
-| `duplicate-strings` | Find repeated string literals                                                         |
-| `duplicate-logic`   | Find functions with similar implementations                                           |
-| `deprecation-check` | Find `@deprecated` annotations and removal markers                                    |
-| `missing-docs`      | Find exports without documentation                                                    |
-| `orphaned-code`     | Find exports that are never imported                                                  |
-| `schema-collision`  | Find naming conflicts between schemas and types                                       |
-
-`missing-docs` reads the `jsDoc` field on extracted functions and types. Viola's
-extraction pass does not populate that field, so against real crawled data every
-exported function and type is reported as undocumented. Keep the rule off, or
-scope it, until extraction fills `jsDoc`.
-
-## Default Rules
-
-The plugin configures these rules (your rules after `.use()` override them):
-
-```ts
-.rule(report.error, when.impact.atLeast(Impact.Major))
-.rule(report.warn, when.impact.is(Impact.Minor))
-.rule(report.info, when.impact.is(Impact.Trivial))
-```
-
-## Writing Your Own Linters
-
-See the [viola documentation](https://jsr.io/@hiisi/viola) for how to create
-custom linters using the `BaseLinter` class. The linters in this package serve
-as examples.
-
-## Support
-
-Whether you use this project, have learned something from it, or just like it,
-please consider supporting it by buying me a coffee, so I can dedicate more time
-on open-source projects like this :)
-
-<a href="https://buymeacoffee.com/orgrinrt" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
+`missing-docs` reads the `jsDoc` field on extracted functions and types, and viola's extraction doesn't fill that field yet, so on real crawled data every export is reported as undocumented. Keep the rule off or scoped until it does. Custom linters are written with the `BaseLinter` class in the [viola documentation](https://jsr.io/@hiisi/viola), and the ones here are examples.
 
 ## License
 
-> You can check out the full license
-> [here](https://github.com/hiisi-digital/viola-default-lints/blob/main/LICENSE)
-
-This project is licensed under the terms of the **Mozilla Public License 2.0**.
+> The project is licensed under the **Mozilla Public License 2.0**.
 
 `SPDX-License-Identifier: MPL-2.0`
+
+> You can check out the full license [here](https://github.com/hiisi-digital/viola-default-lints/blob/main/LICENSE)
